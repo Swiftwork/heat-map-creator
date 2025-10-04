@@ -65,7 +65,7 @@ export function CornerBadge({ speedLimit, x, y }: CornerBadgeProps) {
         }}
         textAnchor="middle"
         x={x}
-        y={y + size * 0.22}
+        y={y + size * 0.19}
       >
         {speedLimit}
       </text>

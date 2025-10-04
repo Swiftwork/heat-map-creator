@@ -3,7 +3,6 @@
 /* eslint-disable simple-import-sort/imports */
 import {
   Box,
-  Button,
   HStack,
   Input,
   Text,
@@ -11,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import React, { useRef } from "react";
 import { FaEye, FaEyeSlash, FaImage, FaTimes, FaTrash } from "react-icons/fa";
+import { RetroButton } from './chakra/RetroButton';
 import { RetroInput } from './chakra/RetroInput';
 
 import { Corner } from "@/types/spline";
@@ -138,15 +138,6 @@ export function Toolbar({
 
   const modeInfo = getModeInfo();
 
-  // shared retro button appearance
-  const retroButtonProps = {
-    borderRadius: 0,
-    fontFamily: 'monospace',
-    borderWidth: 2,
-    borderColor: 'black',
-    boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.45)',
-    _hover: { transform: 'translateY(-1px)' },
-  } as const;
 
   // small SVG tile (8x8) for a crisp repeating checkered pattern
   const checkeredSvg = encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><rect width='8' height='8' fill='white'/><rect x='0' y='0' width='4' height='4' fill='black'/><rect x='4' y='4' width='4' height='4' fill='black'/></svg>");
@@ -251,36 +242,30 @@ export function Toolbar({
             <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
               Mode:
             </Text>
-            <Button
-              {...retroButtonProps}
+            <RetroButton
               colorScheme="yellow"
               size="sm"
-              textTransform="uppercase"
               variant={editingMode === 'spline' ? 'solid' : 'outline'}
               onClick={() => onEditingModeChange('spline')}
             >
               {editingMode === 'spline' && '✓ '}Spline
-            </Button>
-            <Button
-              {...retroButtonProps}
+            </RetroButton>
+            <RetroButton
               colorScheme="orange"
               size="sm"
-              textTransform="uppercase"
               variant={editingMode === 'corners' ? 'solid' : 'outline'}
               onClick={() => onEditingModeChange('corners')}
             >
               {editingMode === 'corners' && '✓ '}Corners
-            </Button>
-            <Button
-              {...retroButtonProps}
+            </RetroButton>
+            <RetroButton
               colorScheme="red"
               size="sm"
-              textTransform="uppercase"
               variant={editingMode === 'metadata' ? 'solid' : 'outline'}
               onClick={() => onEditingModeChange('metadata')}
             >
               {editingMode === 'metadata' && '✓ '}Metadata
-            </Button>
+            </RetroButton>
           </HStack>
 
           {/* Visual Toggles */}
@@ -289,38 +274,37 @@ export function Toolbar({
               Show:
             </Text>
             <HStack gap={1}>
-              <Button {...retroButtonProps} colorScheme={showSpaces ? 'blue' : 'gray'} size="sm" onClick={onToggleSpaces}>
+              <RetroButton colorScheme={showSpaces ? 'blue' : 'gray'} size="sm" onClick={onToggleSpaces}>
                 {showSpaces ? <FaEye /> : <FaEyeSlash />} Spaces
-              </Button>
-              <Button {...retroButtonProps} colorScheme={showCorners ? 'orange' : 'gray'} size="sm" onClick={onToggleCorners}>
+              </RetroButton>
+              <RetroButton colorScheme={showCorners ? 'orange' : 'gray'} size="sm" onClick={onToggleCorners}>
                 {showCorners ? <FaEye /> : <FaEyeSlash />} Corners
-              </Button>
-              <Button {...retroButtonProps} colorScheme={showStartFinish ? 'blue' : 'gray'} size="sm" onClick={onToggleStartFinish}>
+              </RetroButton>
+              <RetroButton colorScheme={showStartFinish ? 'blue' : 'gray'} size="sm" onClick={onToggleStartFinish}>
                 {showStartFinish ? <FaEye /> : <FaEyeSlash />} Start/Finish
-              </Button>
+              </RetroButton>
             </HStack>
           </HStack>
 
           {/* Image Controls */}
           <Input ref={fileInputRef} accept="image/*" display="none" type="file" onChange={handleFileChange} />
           {hasImage ? (
-            <Button {...retroButtonProps} colorScheme="orange" size="sm" onClick={onImageRemove}>
+            <RetroButton colorScheme="orange" size="sm" onClick={onImageRemove}>
               <FaTimes /> Remove Image
-            </Button>
+            </RetroButton>
           ) : (
-            <Button
-              {...retroButtonProps}
+            <RetroButton
               colorScheme="green"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
             >
               <FaImage /> Add Image
-            </Button>
+            </RetroButton>
           )}
 
-          <Button {...retroButtonProps} colorScheme="red" size="sm" onClick={onClear}>
+          <RetroButton colorScheme="red" size="sm" onClick={onClear}>
             <FaTrash /> Clear All
-          </Button>
+          </RetroButton>
 
           {/* Manual Point Controls */}
           {editingMode === 'spline' && (
@@ -329,9 +313,9 @@ export function Toolbar({
                 Click on spline to add points
               </Text>
               {selectedPointIndex !== null && (
-                <Button colorScheme="red" size="sm" title="Remove selected point" onClick={onRemoveSelectedPoint}>
+                <RetroButton colorScheme="red" size="sm" title="Remove selected point" onClick={onRemoveSelectedPoint}>
                   - Remove Point
-                </Button>
+                </RetroButton>
               )}
             </>
           )}
@@ -365,11 +349,11 @@ export function Toolbar({
 
             <HStack gap={2}>
               <Text fontSize="sm" whiteSpace="nowrap">Inner Side:</Text>
-              <Button colorScheme={selectedCorner.innerSide === 'left' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'left' })}>Left</Button>
-              <Button colorScheme={selectedCorner.innerSide === 'right' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'right' })}>Right</Button>
+              <RetroButton colorScheme={selectedCorner.innerSide === 'left' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'left' })}>Left</RetroButton>
+              <RetroButton colorScheme={selectedCorner.innerSide === 'right' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'right' })}>Right</RetroButton>
             </HStack>
 
-            <Button colorScheme="red" size="sm" onClick={onCornerRemove}><FaTrash /> Remove Corner</Button>
+            <RetroButton colorScheme="red" size="sm" onClick={onCornerRemove}><FaTrash /> Remove Corner</RetroButton>
           </HStack>
         )}
 
