@@ -76,6 +76,7 @@ interface CornerVisual {
   corner: Corner;
   line: SegmentLine;
   badge: Vec2;
+  rotation: number;
 }
 
 const evaluateCubicBezier = (p0: Vec2, cp1: Vec2, cp2: Vec2, p1: Vec2, t: number): Vec2 => {
@@ -417,7 +418,14 @@ const computeCornerVisuals = (
       y: centerPoint.y + perp.y * badgeOffset * flagOffset,
     };
 
-    visuals.push({ corner, line, badge });
+    // Calculate rotation angle from tangent vector (in degrees)
+    // For right inner side corners, rotate 180 degrees to face the correct direction
+    let rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
+    if (corner.innerSide === 'right') {
+      rotation += 180;
+    }
+
+    visuals.push({ corner, line, badge, rotation });
     return visuals;
   }, []);
 };
@@ -715,8 +723,7 @@ export function RaceTrack({
       {showCorners && cornerVisuals.map(({ line }, index) => (
         <line
           key={`corner-line-${index}`}
-          stroke="#ff6b6b"
-          strokeLinecap="round"
+          stroke="white"
           strokeWidth={5}
           x1={line.x1}
           x2={line.x2}
@@ -725,9 +732,10 @@ export function RaceTrack({
         />
       ))}
 
-      {showCorners && cornerVisuals.map(({ corner, badge }) => (
+      {showCorners && cornerVisuals.map(({ corner, badge, rotation }) => (
         <CornerBadge
           key={`corner-${corner.id}`}
+          rotation={rotation}
           speedLimit={corner.speedLimit}
           x={badge.x}
           y={badge.y}

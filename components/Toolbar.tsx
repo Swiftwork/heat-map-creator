@@ -270,25 +270,22 @@ export function Toolbar({
               Mode:
             </Text>
             <RetroButton
-              colorScheme="yellow"
+              isToggled={editingMode === 'spline'}
               size="sm"
-              variant={editingMode === 'spline' ? 'solid' : 'outline'}
               onClick={() => onEditingModeChange('spline')}
             >
               {editingMode === 'spline' && '✓ '}Spline
             </RetroButton>
             <RetroButton
-              colorScheme="orange"
+              isToggled={editingMode === 'corners'}
               size="sm"
-              variant={editingMode === 'corners' ? 'solid' : 'outline'}
               onClick={() => onEditingModeChange('corners')}
             >
               {editingMode === 'corners' && '✓ '}Corners
             </RetroButton>
             <RetroButton
-              colorScheme="red"
+              isToggled={editingMode === 'metadata'}
               size="sm"
-              variant={editingMode === 'metadata' ? 'solid' : 'outline'}
               onClick={() => onEditingModeChange('metadata')}
             >
               {editingMode === 'metadata' && '✓ '}Metadata
@@ -376,8 +373,20 @@ export function Toolbar({
 
             <HStack gap={2}>
               <Text fontSize="sm" whiteSpace="nowrap">Inner Side:</Text>
-              <RetroButton colorScheme={selectedCorner.innerSide === 'left' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'left' })}>Left</RetroButton>
-              <RetroButton colorScheme={selectedCorner.innerSide === 'right' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'right' })}>Right</RetroButton>
+              <RetroButton 
+                isActive={selectedCorner.innerSide === 'left'} 
+                size="sm" 
+                onClick={() => onCornerUpdate?.({ innerSide: 'left' })}
+              >
+                Left
+              </RetroButton>
+              <RetroButton 
+                isActive={selectedCorner.innerSide === 'right'} 
+                size="sm" 
+                onClick={() => onCornerUpdate?.({ innerSide: 'right' })}
+              >
+                Right
+              </RetroButton>
             </HStack>
 
             <RetroButton colorScheme="red" size="sm" onClick={onCornerRemove}><FaTrash /> Remove Corner</RetroButton>
