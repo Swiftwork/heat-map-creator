@@ -117,14 +117,6 @@ Tracks are built using **Bezier curves**, then **discretized into Spaces** that 
   - Spaces grid
   - Corners
   - Start/Finish
-- Interactive **Turn Simulator**:
-  - Select car and input speed.
-  - Step through the move.
-  - Show:
-    - Heat payments
-    - Slipstream options
-    - Spinouts
-    - Final placement
 
 ---
 
@@ -138,12 +130,7 @@ Tracks are built using **Bezier curves**, then **discretized into Spaces** that 
   - Corner boundaries
   - Missing metadata
 
-### 2. Test Runner
-
-- Simulate turns or laps with AI drivers.
-- Identify problematic corners (too tight, too forgiving).
-
-### 3. Export Formats
+### 2. Export Formats
 
 - **Visual:**
   - PNG, PDF, SVG with grid and corner markers.
@@ -161,39 +148,7 @@ Tracks are built using **Bezier curves**, then **discretized into Spaces** that 
 ## 💡 F. Optional / Advanced Features
 
 - **Auto-suggest Corner Speed Limits** based on curvature.
-- **Heat Management Visualizer** (color-coded by intensity).
-- **Playtest AI** to evaluate pacing.
 - **Expansion Support**:
   - Weather tokens
   - Chicanes
   - Tunnels
-- **Community Features**:
-  - Online gallery
-  - Sharing links
-  - Versioned edits
-
----
-
-## 🧰 G. Technical Implementation Notes
-
-| Layer           | Recommendation                                 |
-| --------------- | ---------------------------------------------- |
-| **Frontend**    | React, SvelteKit, or Next.js                   |
-| **Graphics**    | Canvas API, Pixi.js, or Three.js               |
-| **Geometry**    | Bezier.js or Paper.js for curve math           |
-| **Backend**     | Node.js + Express/NestJS or Firebase Functions |
-| **Database**    | Firestore, Supabase, or MongoDB                |
-| **Auth**        | Firebase Auth / Supabase Auth / Auth0          |
-| **Export**      | jsPDF, html2canvas, or SVG.js                  |
-| **File Format** | JSON (Bezier + Spaces + Corners + Metadata)    |
-
----
-
-## 🧭 H. MVP Scope (Recommended Build Order)
-
-1. **Bezier Curve Editor** – Draw and edit centerline.
-2. **Space Discretization** – Sample curve into Spaces and Spots.
-3. **Corner Lines** – Manual placement + Speed Limits.
-4. **Track Validation** – Closed loop, no overlaps, valid corners.
-5. **Export** – PNG/SVG and JSON.
-6. _(Later)_ Add Heat visualization, AI simulation, and online sharing.
