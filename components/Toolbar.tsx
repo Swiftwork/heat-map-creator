@@ -21,6 +21,8 @@ interface ToolbarProps {
   onImageRemove: () => void;
   raceSegments: number;
   onRaceSegmentsChange: (value: number) => void;
+  trackWidth: number;
+  onTrackWidthChange: (value: number) => void;
   hasImage: boolean;
   // New props for Section B features
   showSpaces: boolean;
@@ -58,6 +60,8 @@ export function Toolbar({
   onImageRemove,
   raceSegments,
   onRaceSegmentsChange,
+  trackWidth,
+  onTrackWidthChange,
   hasImage,
   showSpaces,
   showCorners,
@@ -98,6 +102,13 @@ export function Toolbar({
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value > 0) {
       onRaceSegmentsChange(value);
+    }
+  };
+
+  const handleTrackWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value) && value > 0) {
+      onTrackWidthChange(value);
     }
   };
 
@@ -234,6 +245,22 @@ export function Toolbar({
               value={raceSegments}
               width="80px"
               onChange={handleRaceSegmentsChange}
+            />
+          </HStack>
+
+          {/* Track Width */}
+          <HStack gap={2}>
+            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+              Width:
+            </Text>
+            <RetroInput
+              max={300}
+              min={20}
+              size="sm"
+              type="number"
+              value={trackWidth}
+              width="80px"
+              onChange={handleTrackWidthChange}
             />
           </HStack>
 

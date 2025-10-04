@@ -43,6 +43,7 @@ export function SplineEditor() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [raceSegments, setRaceSegments] = useState(100);
+  const [trackWidth, setTrackWidth] = useState(100);
   
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
@@ -80,13 +81,15 @@ export function SplineEditor() {
     };
   }, []);
 
-  // Restore race segments from saved track data
+  // Restore race segments and track width from saved track data
   useEffect(() => {
-    if (isLoaded && trackData?.discretizationSettings?.targetSpacesPerLap) {
+    if (isLoaded && trackData?.discretizationSettings) {
       const savedSegments = trackData.discretizationSettings.targetSpacesPerLap;
-      setRaceSegments(savedSegments);
+      const savedTrackWidth = trackData.discretizationSettings.trackWidth;
+      if (savedSegments) setRaceSegments(savedSegments);
+      if (savedTrackWidth) setTrackWidth(savedTrackWidth);
     }
-  }, [isLoaded, trackData?.discretizationSettings?.targetSpacesPerLap]);
+  }, [isLoaded, trackData?.discretizationSettings]);
 
   const getSvgPoint = useCallback((clientX: number, clientY: number): Point => {
     if (!svgRef.current) return { x: clientX, y: clientY };
@@ -360,6 +363,24 @@ export function SplineEditor() {
       );
       
       updatedTrackData.metadata = updatedMetadata;
+      
+      setTrackData(updatedTrackData);
+      setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
+    }
+  }, [trackData, setTrackData]);
+
+  // Update track width
+  const handleTrackWidthChange = useCallback((newWidth: number) => {
+    setTrackWidth(newWidth);
+    
+    if (trackData) {
+      const updatedTrackData = {
+        ...trackData,
+        discretizationSettings: {
+          ...trackData.discretizationSettings,
+          trackWidth: newWidth,
+        },
+      };
       
       setTrackData(updatedTrackData);
       setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
@@ -662,6 +683,7 @@ export function SplineEditor() {
             showStartFinish={editorState.showStartFinish}
             spaces={trackData.spaces}
             startFinishSpaceIndex={trackData.metadata.startFinishSpaceIndex}
+            trackWidth={trackData.discretizationSettings.trackWidth}
             onSpaceClick={handleSpaceClick}
             onStartFinishClick={handleStartFinishClick}
           />
@@ -715,6 +737,7 @@ export function SplineEditor() {
         showSpaces={editorState.showSpaces}
         showStartFinish={editorState.showStartFinish}
         trackMetadata={trackData?.metadata}
+        trackWidth={trackWidth}
         onClear={handleClear}
         onCornerRemove={handleRemoveCorner}
         onCornerUpdate={handleUpdateCorner}
@@ -727,6 +750,7 @@ export function SplineEditor() {
         onToggleCorners={handleToggleCorners}
         onToggleSpaces={handleToggleSpaces}
         onToggleStartFinish={handleToggleStartFinish}
+        onTrackWidthChange={handleTrackWidthChange}
       />
     </Box>
   );
