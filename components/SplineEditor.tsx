@@ -44,6 +44,7 @@ export function SplineEditor() {
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [raceSegments, setRaceSegments] = useState(100);
   const [trackWidth, setTrackWidth] = useState(100);
+  const [trackColor, setTrackColor] = useState('#3a3a3a');
   
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
@@ -683,6 +684,7 @@ export function SplineEditor() {
             showStartFinish={editorState.showStartFinish}
             spaces={trackData.spaces}
             startFinishSpaceIndex={trackData.metadata.startFinishSpaceIndex}
+            trackColor={trackColor}
             trackWidth={trackData.discretizationSettings.trackWidth}
             onSpaceClick={handleSpaceClick}
             onStartFinishClick={handleStartFinishClick}
@@ -736,6 +738,7 @@ export function SplineEditor() {
         showCorners={editorState.showCorners}
         showSpaces={editorState.showSpaces}
         showStartFinish={editorState.showStartFinish}
+        trackColor={trackColor}
         trackMetadata={trackData?.metadata}
         trackWidth={trackWidth}
         onClear={handleClear}
@@ -750,6 +753,7 @@ export function SplineEditor() {
         onToggleCorners={handleToggleCorners}
         onToggleSpaces={handleToggleSpaces}
         onToggleStartFinish={handleToggleStartFinish}
+        onTrackColorChange={setTrackColor}
         onTrackWidthChange={handleTrackWidthChange}
       />
     </Box>

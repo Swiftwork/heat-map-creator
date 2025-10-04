@@ -31,6 +31,7 @@ interface RaceTrackProps {
   showStartFinish: boolean;
   startFinishSpaceIndex: number;
   trackWidth?: number;
+  trackColor?: string;
   editingMode?: 'spline' | 'corners' | 'metadata' | 'appearance';
   onSpaceClick?: (spaceIndex: number) => void;
   selectedCorner?: string | null;
@@ -530,6 +531,7 @@ export function RaceTrack({
   showStartFinish,
   startFinishSpaceIndex,
   trackWidth = DEFAULT_TRACK_WIDTH,
+  trackColor,
   editingMode = 'spline',
   onSpaceClick,
   selectedCorner,
@@ -642,7 +644,7 @@ export function RaceTrack({
         />
       ))}
 
-      <path d={trackFillPath} fill="#3a3a3a" stroke="none" />
+      <path d={trackFillPath} fill={trackColor ?? '#3a3a3a'} stroke="none" />
 
       {segmentLines.map((line, index) => (
         <line

@@ -11,6 +11,7 @@ import {
 import React, { useRef } from "react";
 import { FaEye, FaEyeSlash, FaImage, FaTimes, FaTrash } from "react-icons/fa";
 import { RetroButton } from './chakra/RetroButton';
+import { RetroColorInput } from './chakra/RetroColorInput';
 import { RetroInput } from './chakra/RetroInput';
 
 import { Corner } from "@/types/spline";
@@ -19,11 +20,11 @@ interface ToolbarProps {
   onClear: () => void;
   onImageUpload: (imageUrl: string) => void;
   onImageRemove: () => void;
-  raceSegments: number;
-  onRaceSegmentsChange: (value: number) => void;
+  hasImage: boolean;
   trackWidth: number;
   onTrackWidthChange: (value: number) => void;
-  hasImage: boolean;
+  raceSegments: number;
+  onRaceSegmentsChange: (value: number) => void;
   // New props for Section B features
   showSpaces: boolean;
   showCorners: boolean;
@@ -33,6 +34,8 @@ interface ToolbarProps {
   onToggleStartFinish: () => void;
   editingMode: 'spline' | 'corners' | 'metadata' | 'appearance';
   onEditingModeChange: (mode: 'spline' | 'corners' | 'metadata' | 'appearance') => void;
+  trackColor?: string;
+  onTrackColorChange?: (color: string) => void;
   trackMetadata?: {
     name: string;
     laps: number;
@@ -78,6 +81,8 @@ export function Toolbar({
   selectedCorner,
   onCornerUpdate,
   onCornerRemove,
+  trackColor,
+  onTrackColorChange,
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,22 +232,6 @@ export function Toolbar({
         {/* Main Controls Row + Editing Controls Row */}
   <VStack align="stretch" gap={2}>
           <HStack gap={4} justify="center" wrap="wrap">
-            {/* Race Segments */}
-            <HStack gap={2}>
-              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                Spaces:
-              </Text>
-              <RetroInput
-                min={1}
-                size="sm"
-                type="number"
-                value={raceSegments}
-                width="80px"
-                onChange={handleRaceSegmentsChange}
-              />
-            </HStack>
-
-
           {/* Editing Mode Buttons */}
           <HStack gap={2}>
             <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
@@ -398,6 +387,17 @@ export function Toolbar({
                       onChange={handleTrackWidthChange}
                     />
                   </HStack>
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Track Color:
+                    </Text>
+                    <RetroColorInput
+                      size="sm"
+                      value={trackColor ?? '#3a3a3a'}
+                      width="80px"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => onTrackColorChange?.(e.target.value)}
+                    />
+                  </HStack>
                 </HStack>
               </VStack>
             )}
@@ -411,6 +411,19 @@ export function Toolbar({
                     <RetroInput size="sm" value={trackMetadata.name} width="120px" onChange={(e) => handleMetadataChange('name', e.target.value)} />
                   </HStack>
 
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Spaces:
+                    </Text>
+                    <RetroInput
+                      min={1}
+                      size="sm"
+                      type="number"
+                      value={raceSegments}
+                      width="80px"
+                      onChange={handleRaceSegmentsChange}
+                    />
+                  </HStack>
 
 
                   <HStack gap={2}>
