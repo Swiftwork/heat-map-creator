@@ -150,7 +150,7 @@ export interface EditorState {
   showSpaces: boolean;
   showCorners: boolean;
   showStartFinish: boolean;
-  editingMode: 'spline' | 'corners' | 'metadata';
+  editingMode: 'spline' | 'corners' | 'metadata' | 'appearance';
 }
 
 // Serialization and validation types

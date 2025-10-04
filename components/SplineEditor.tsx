@@ -401,7 +401,7 @@ export function SplineEditor() {
   }, []);
 
   // Editing mode handler
-  const handleEditingModeChange = useCallback((mode: 'spline' | 'corners' | 'metadata') => {
+  const handleEditingModeChange = useCallback((mode: 'spline' | 'corners' | 'metadata' | 'appearance') => {
     setEditorState(prev => ({ ...prev, editingMode: mode, selectedCorner: null }));
     setSelectedPointIndex(null);
   }, []);

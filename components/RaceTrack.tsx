@@ -31,7 +31,7 @@ interface RaceTrackProps {
   showStartFinish: boolean;
   startFinishSpaceIndex: number;
   trackWidth?: number;
-  editingMode?: 'spline' | 'corners' | 'metadata';
+  editingMode?: 'spline' | 'corners' | 'metadata' | 'appearance';
   onSpaceClick?: (spaceIndex: number) => void;
   selectedCorner?: string | null;
   onStartFinishClick?: (spaceIndex: number) => void;
