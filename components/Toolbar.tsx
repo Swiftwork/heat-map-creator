@@ -241,6 +241,33 @@ export function Toolbar({
             </HStack>
 
 
+          {/* Editing Mode Buttons */}
+          <HStack gap={2}>
+            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+              Mode:
+            </Text>
+            <RetroButton
+              isToggled={editingMode === 'spline'}
+              size="sm"
+              onClick={() => onEditingModeChange('spline')}
+            >
+              {editingMode === 'spline' && '✓ '}Spline
+            </RetroButton>
+            <RetroButton
+              isToggled={editingMode === 'corners'}
+              size="sm"
+              onClick={() => onEditingModeChange('corners')}
+            >
+              {editingMode === 'corners' && '✓ '}Corners
+            </RetroButton>
+            <RetroButton
+              isToggled={editingMode === 'metadata'}
+              size="sm"
+              onClick={() => onEditingModeChange('metadata')}
+            >
+              {editingMode === 'metadata' && '✓ '}Metadata
+            </RetroButton>
+          </HStack>
 
             {/* Editing Mode Buttons */}
             <HStack gap={2}>
@@ -291,6 +318,23 @@ export function Toolbar({
               </HStack>
             </HStack>
 
+            <HStack gap={2}>
+              <Text fontSize="sm" whiteSpace="nowrap">Inner Side:</Text>
+              <RetroButton 
+                isActive={selectedCorner.innerSide === 'left'} 
+                size="sm" 
+                onClick={() => onCornerUpdate?.({ innerSide: 'left' })}
+              >
+                Left
+              </RetroButton>
+              <RetroButton 
+                isActive={selectedCorner.innerSide === 'right'} 
+                size="sm" 
+                onClick={() => onCornerUpdate?.({ innerSide: 'right' })}
+              >
+                Right
+              </RetroButton>
+            </HStack>
             {/* Image Controls */}
             <Input ref={fileInputRef} accept="image/*" display="none" type="file" onChange={handleFileChange} />
             {hasImage ? (

@@ -4,9 +4,10 @@ interface CornerBadgeProps {
   speedLimit: number;
   x: number;
   y: number;
+  rotation?: number;
 }
 
-export function CornerBadge({ speedLimit, x, y }: CornerBadgeProps) {
+export function CornerBadge({ speedLimit, x, y, rotation = 0 }: CornerBadgeProps) {
   const size = 45;
   const radius = size / 2;
   const scale = size / 100; // Scale factor from original 100x100 SVG
@@ -16,8 +17,8 @@ export function CornerBadge({ speedLimit, x, y }: CornerBadgeProps) {
 
   return (
     <>
-      {/* Badge background and clock marks - scaled */}
-      <g transform={`translate(${x - radius}, ${y - radius}) scale(${scale})`}>
+      {/* Badge background, clock marks, and text - all scaled and rotated together */}
+      <g transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}>
         <defs>
           <clipPath id={`clip-badge-${speedLimit}`}>
             <rect height="100" rx="50" width="100" />
@@ -53,22 +54,22 @@ export function CornerBadge({ speedLimit, x, y }: CornerBadgeProps) {
           x="1.5"
           y="1.5"
         />
+        
+        {/* Speed limit number - now inside the rotated group */}
+        <text
+          fill="black"
+          style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: `${fontSize / scale}px`, // Adjust font size for scaling
+            fontWeight: 700,
+          }}
+          textAnchor="middle"
+          x="50"
+          y={50 + (size * 0.19) / scale} // Adjust y position for scaling
+        >
+          {speedLimit}
+        </text>
       </g>
-      
-      {/* Speed limit number - positioned absolutely, NOT scaled */}
-      <text
-        fill="black"
-        style={{
-          fontFamily: 'Inter, sans-serif',
-          fontSize: `${fontSize}px`,
-          fontWeight: 700,
-        }}
-        textAnchor="middle"
-        x={x}
-        y={y + size * 0.19}
-      >
-        {speedLimit}
-      </text>
     </>
   );
 }
