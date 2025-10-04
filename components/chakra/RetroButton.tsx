@@ -19,23 +19,20 @@ export function RetroButton({ children, isActive, isToggled, ...props }: RetroBu
     textTransform: 'uppercase' as const,   
     // Enhanced styling for toggle states
     ...(isActive && {
-      bg: 'blue.500',
-      color: 'white',
-      borderColor: 'blue.600',
-      boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.6), 0 0 0 2px rgba(59, 130, 246, 0.5)',
+      bg: 'yellow.500',
+      color: 'black',
+      borderColor: 'yellow.600',
       _hover: { 
         transform: 'translateY(-1px)',
-        bg: 'blue.600',
+        bg: 'yellow.600',
       },
     }),
     ...(isToggled && {
-      bg: 'green.500',
-      color: 'white',
-      borderColor: 'green.600',
-      boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.6), 0 0 0 2px rgba(34, 197, 94, 0.5)',
+      bg: 'yellow.400',
+      color: 'black',
+      borderColor: 'yellow.600',
       _hover: { 
-        transform: 'translateY(-1px)',
-        bg: 'green.600',
+        transform: 'translateY(0px)',
       },
     }),
     px: '8px',

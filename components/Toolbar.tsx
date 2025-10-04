@@ -31,8 +31,8 @@ interface ToolbarProps {
   onToggleSpaces: () => void;
   onToggleCorners: () => void;
   onToggleStartFinish: () => void;
-  editingMode: 'spline' | 'corners' | 'metadata';
-  onEditingModeChange: (mode: 'spline' | 'corners' | 'metadata') => void;
+  editingMode: 'spline' | 'corners' | 'metadata' | 'appearance';
+  onEditingModeChange: (mode: 'spline' | 'corners' | 'metadata' | 'appearance') => void;
   trackMetadata?: {
     name: string;
     laps: number;
@@ -144,6 +144,8 @@ export function Toolbar({
         return { color: 'orange.400', text: 'Corner Placement Mode', description: 'Click spaces to add/edit corners' };
       case 'metadata':
         return { color: 'purple.400', text: 'Track Metadata Mode', description: 'Edit track information' };
+      case 'appearance':
+        return { color: 'green.400', text: 'Track Appearance Mode', description: 'Customize track visuals' };
     }
   };
 
@@ -156,8 +158,8 @@ export function Toolbar({
   return (
     <Box
       /* vintage racing look: dark leather background with subtle gradient + felt texture */
-      bgGradient="linear(to-r, gray.900, #0f1410)"
-      bgImage={"repeating-linear-gradient(135deg, rgba(255,255,255,0.01) 0 2px, transparent 2px 6px)"}
+      bgGradient="linear(to-r, gray.900, gray.200)"
+      bgImage={"repeating-linear-gradient(135deg, rgba(0, 0, 0, 1) 0 2px, transparent 2px 6px)"}
       borderBottom="6px solid"
       borderColor="yellow.500"
       boxShadow="0 6px 0 rgba(0,0,0,0.6)"
@@ -207,7 +209,7 @@ export function Toolbar({
               width="56px"
             >
               <Text fontSize="20px" fontWeight="bold" lineHeight="1" textAlign="center">
-                {editingMode === 'spline' ? '✏️' : editingMode === 'corners' ? '🏁' : '📋'}
+                {editingMode === 'spline' ? '✏️' : editingMode === 'corners' ? '🏁' : editingMode === 'metadata' ? '📋' : '🎨'}
               </Text>
             </Box>
 
@@ -267,38 +269,14 @@ export function Toolbar({
             >
               {editingMode === 'metadata' && '✓ '}Metadata
             </RetroButton>
+            <RetroButton
+              isToggled={editingMode === 'appearance'}
+              size="sm"
+              onClick={() => onEditingModeChange('appearance')}
+            >
+              {editingMode === 'appearance' && '✓ '}Appearance
+            </RetroButton>
           </HStack>
-
-            {/* Editing Mode Buttons */}
-            <HStack gap={2}>
-              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                Mode:
-              </Text>
-              <RetroButton
-                colorScheme="yellow"
-                size="sm"
-                variant={editingMode === 'spline' ? 'solid' : 'outline'}
-                onClick={() => onEditingModeChange('spline')}
-              >
-                {editingMode === 'spline' && '✓ '}Spline
-              </RetroButton>
-              <RetroButton
-                colorScheme="orange"
-                size="sm"
-                variant={editingMode === 'corners' ? 'solid' : 'outline'}
-                onClick={() => onEditingModeChange('corners')}
-              >
-                {editingMode === 'corners' && '✓ '}Corners
-              </RetroButton>
-              <RetroButton
-                colorScheme="red"
-                size="sm"
-                variant={editingMode === 'metadata' ? 'solid' : 'outline'}
-                onClick={() => onEditingModeChange('metadata')}
-              >
-                {editingMode === 'metadata' && '✓ '}Metadata
-              </RetroButton>
-            </HStack>
 
             {/* Visual Toggles */}
             <HStack gap={2}>
@@ -349,7 +327,7 @@ export function Toolbar({
                 </Text>
                 {selectedPointIndex !== null && (
                   <RetroButton colorScheme="red" size="sm" title="Remove selected point" onClick={onRemoveSelectedPoint}>
-                    - Remove Point
+                    <FaTrash /> Remove Point
                   </RetroButton>
                 )}
               </HStack>
@@ -402,16 +380,10 @@ export function Toolbar({
               </HStack>
             )}
 
-            {/* Track Metadata Controls */}
-            {trackMetadata && editingMode === 'metadata' && (
+            {/* Track Appearance Controls */}
+            {editingMode === 'appearance' && (
               <VStack align="stretch" gap={4} p={4}>
                 <HStack gap={4} justify="center" wrap="wrap">
-
-                  <HStack gap={2}>
-                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Track Name:</Text>
-                    <Input bg="gray.700" border="1px solid" borderColor="gray.600" size="sm" value={trackMetadata.name} width="120px" onChange={(e) => handleMetadataChange('name', e.target.value)} />
-                  </HStack>
-                            {/* Track Width */}
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
                       Width:
@@ -426,6 +398,19 @@ export function Toolbar({
                       onChange={handleTrackWidthChange}
                     />
                   </HStack>
+                </HStack>
+              </VStack>
+            )}
+
+            {/* Track Metadata Controls */}
+            {trackMetadata && editingMode === 'metadata' && (
+              <VStack align="stretch" gap={4} p={4}>
+                <HStack gap={4} justify="center" wrap="wrap">
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Track Name:</Text>
+                    <RetroInput size="sm" value={trackMetadata.name} width="120px" onChange={(e) => handleMetadataChange('name', e.target.value)} />
+                  </HStack>
+
 
 
                   <HStack gap={2}>
