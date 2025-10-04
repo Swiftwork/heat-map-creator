@@ -19,12 +19,13 @@ interface PathEditorProps {
   ) => void;
   onPathClick: () => void;
   onPointClick: (index: number) => void;
+  onPathClickWithCoords?: (x: number, y: number) => void;
 }
 
 export function PathEditor({
   points,
   color,
-  strokeWidth,
+  strokeWidth: _strokeWidth,
   closed,
   isSelected,
   selectedPointIndex,
@@ -32,6 +33,7 @@ export function PathEditor({
   onHandleDrag,
   onPathClick,
   onPointClick,
+  onPathClickWithCoords,
 }: PathEditorProps) {
   const pathData = bezierToSvgPath(points, closed);
 
@@ -46,7 +48,19 @@ export function PathEditor({
         strokeLinejoin="round"
         strokeWidth={30}
         style={{ cursor: "pointer" }}
-        onClick={onPathClick}
+        onClick={(e) => {
+          if (onPathClickWithCoords) {
+            const svg = (e.target as SVGElement).ownerSVGElement;
+            if (svg) {
+              const pt = svg.createSVGPoint();
+              pt.x = e.clientX;
+              pt.y = e.clientY;
+              const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse());
+              onPathClickWithCoords(svgP.x, svgP.y);
+            }
+          }
+          onPathClick();
+        }}
       />
 
       {/* Show control points and handles when selected */}
