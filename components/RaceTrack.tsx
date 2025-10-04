@@ -14,12 +14,10 @@ import { bezierToSvgPath } from '@/utils/pathUtils';
 
 import { CornerBadge } from './CornerBadge';
 
-const TRACK_WIDTH = 100;
-const HALF_TRACK_WIDTH = TRACK_WIDTH / 2;
+const DEFAULT_TRACK_WIDTH = 100;
 const SAMPLES_PER_CURVE = 100;
 const CHECKER_SIZE = 10;
 const FLAG_SIZE = 30;
-const FLAG_OFFSET = HALF_TRACK_WIDTH + 30;
 
 interface RaceTrackProps {
   points: BezierPoint[];
@@ -31,6 +29,7 @@ interface RaceTrackProps {
   showCorners: boolean;
   showStartFinish: boolean;
   startFinishSpaceIndex: number;
+  trackWidth?: number;
   editingMode?: 'spline' | 'corners' | 'metadata';
   onSpaceClick?: (spaceIndex: number) => void;
   selectedCorner?: string | null;
@@ -196,9 +195,9 @@ const buildOffsetPath = (points: BezierPoint[], closed: boolean, offset: number)
   return createPathString(sampledPoints, closed);
 };
 
-const buildTrackFillPath = (points: BezierPoint[], closed: boolean): string => {
-  const leftPoints = sampleOffsetPoints(points, closed, HALF_TRACK_WIDTH);
-  const rightPoints = sampleOffsetPoints(points, closed, -HALF_TRACK_WIDTH);
+const buildTrackFillPath = (points: BezierPoint[], closed: boolean, halfTrackWidth: number): string => {
+  const leftPoints = sampleOffsetPoints(points, closed, halfTrackWidth);
+  const rightPoints = sampleOffsetPoints(points, closed, -halfTrackWidth);
 
   if (!leftPoints.length || !rightPoints.length) {
     return '';
@@ -231,7 +230,8 @@ const buildInnerSidePaths = (
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
   segmentArcLength: number,
   totalArcLength: number,
-  spacesCount: number
+  spacesCount: number,
+  halfTrackWidth: number
 ): InnerSidePath[] => {
   if (segments.length === 0 || bezierSegments.length === 0 || segmentArcLength === 0) {
     return [];
@@ -271,7 +271,7 @@ const buildInnerSidePaths = (
       }
 
       const perp = perpendicular(normal);
-      const offset = segment.side === 'left' ? HALF_TRACK_WIDTH : -HALF_TRACK_WIDTH;
+      const offset = segment.side === 'left' ? halfTrackWidth : -halfTrackWidth;
       innerPoints.push({
         x: centerPoint.x + perp.x * offset,
         y: centerPoint.y + perp.y * offset,
@@ -341,7 +341,8 @@ const computeSegmentLines = (
   closed: boolean,
   segments: number,
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
-  segmentArcLength: number
+  segmentArcLength: number,
+  halfTrackWidth: number
 ): SegmentLine[] => {
   if (!closed || segments === 0 || bezierSegments.length === 0 || segmentArcLength === 0) {
     return [];
@@ -362,10 +363,10 @@ const computeSegmentLines = (
 
     const perp = perpendicular(normal);
     lines.push({
-      x1: centerPoint.x + perp.x * HALF_TRACK_WIDTH,
-      y1: centerPoint.y + perp.y * HALF_TRACK_WIDTH,
-      x2: centerPoint.x - perp.x * HALF_TRACK_WIDTH,
-      y2: centerPoint.y - perp.y * HALF_TRACK_WIDTH,
+      x1: centerPoint.x + perp.x * halfTrackWidth,
+      y1: centerPoint.y + perp.y * halfTrackWidth,
+      x2: centerPoint.x - perp.x * halfTrackWidth,
+      y2: centerPoint.y - perp.y * halfTrackWidth,
     });
   }
 
@@ -377,7 +378,9 @@ const computeCornerVisuals = (
   corners: Corner[],
   spaces: Space[],
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
-  segmentArcLength: number
+  segmentArcLength: number,
+  halfTrackWidth: number,
+  flagOffset: number
 ): CornerVisual[] => {
   if (!closed || corners.length === 0 || bezierSegments.length === 0 || segmentArcLength === 0) {
     return [];
@@ -402,16 +405,16 @@ const computeCornerVisuals = (
 
     const perp = perpendicular(normal);
     const line: SegmentLine = {
-      x1: centerPoint.x + perp.x * HALF_TRACK_WIDTH,
-      y1: centerPoint.y + perp.y * HALF_TRACK_WIDTH,
-      x2: centerPoint.x - perp.x * HALF_TRACK_WIDTH,
-      y2: centerPoint.y - perp.y * HALF_TRACK_WIDTH,
+      x1: centerPoint.x + perp.x * halfTrackWidth,
+      y1: centerPoint.y + perp.y * halfTrackWidth,
+      x2: centerPoint.x - perp.x * halfTrackWidth,
+      y2: centerPoint.y - perp.y * halfTrackWidth,
     };
 
     const badgeOffset = corner.innerSide === 'left' ? -1 : 1;
     const badge: Vec2 = {
-      x: centerPoint.x + perp.x * badgeOffset * FLAG_OFFSET,
-      y: centerPoint.y + perp.y * badgeOffset * FLAG_OFFSET,
+      x: centerPoint.x + perp.x * badgeOffset * flagOffset,
+      y: centerPoint.y + perp.y * badgeOffset * flagOffset,
     };
 
     visuals.push({ corner, line, badge });
@@ -422,7 +425,9 @@ const computeCornerVisuals = (
 const buildStartFinishVisual = (
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
   segmentArcLength: number,
-  startFinishSpaceIndex: number
+  startFinishSpaceIndex: number,
+  halfTrackWidth: number,
+  flagOffset: number
 ): StartFinishVisual | null => {
   if (bezierSegments.length === 0 || segmentArcLength === 0) {
     return null;
@@ -440,12 +445,12 @@ const buildStartFinishVisual = (
 
   const perp = perpendicular(normal);
   const startPoint = {
-    x: centerPoint.x + perp.x * HALF_TRACK_WIDTH,
-    y: centerPoint.y + perp.y * HALF_TRACK_WIDTH,
+    x: centerPoint.x + perp.x * halfTrackWidth,
+    y: centerPoint.y + perp.y * halfTrackWidth,
   };
   const endPoint = {
-    x: centerPoint.x - perp.x * HALF_TRACK_WIDTH,
-    y: centerPoint.y - perp.y * HALF_TRACK_WIDTH,
+    x: centerPoint.x - perp.x * halfTrackWidth,
+    y: centerPoint.y - perp.y * halfTrackWidth,
   };
 
   const lineVector = {
@@ -469,8 +474,8 @@ const buildStartFinishVisual = (
     });
   }
 
-  const flagX = centerPoint.x - perp.x * FLAG_OFFSET;
-  const flagY = centerPoint.y - perp.y * FLAG_OFFSET;
+  const flagX = centerPoint.x - perp.x * flagOffset;
+  const flagY = centerPoint.y - perp.y * flagOffset;
   const angle = Math.atan2(perp.y, perp.x) * (180 / Math.PI);
 
   return {
@@ -509,17 +514,21 @@ export function RaceTrack({
   showCorners,
   showStartFinish,
   startFinishSpaceIndex,
+  trackWidth = DEFAULT_TRACK_WIDTH,
   editingMode = 'spline',
   onSpaceClick,
   selectedCorner,
   onStartFinishClick,
 }: RaceTrackProps) {
+  const halfTrackWidth = trackWidth / 2;
+  const flagOffset = halfTrackWidth + 30;
+  
   const bezierSegments = useMemo(() => pointsToBezierSegments(points, 'C1'), [points]);
 
   const centerPath = useMemo(() => bezierToSvgPath(points, closed), [points, closed]);
-  const outerLeftPath = useMemo(() => buildOffsetPath(points, closed, HALF_TRACK_WIDTH), [points, closed]);
-  const outerRightPath = useMemo(() => buildOffsetPath(points, closed, -HALF_TRACK_WIDTH), [points, closed]);
-  const trackFillPath = useMemo(() => buildTrackFillPath(points, closed), [points, closed]);
+  const outerLeftPath = useMemo(() => buildOffsetPath(points, closed, halfTrackWidth), [points, closed, halfTrackWidth]);
+  const outerRightPath = useMemo(() => buildOffsetPath(points, closed, -halfTrackWidth), [points, closed, halfTrackWidth]);
+  const trackFillPath = useMemo(() => buildTrackFillPath(points, closed, halfTrackWidth), [points, closed, halfTrackWidth]);
 
   const totalArcLength = useMemo(
     () => (bezierSegments.length > 0 ? calculateChainArcLength(bezierSegments) : 0),
@@ -537,8 +546,8 @@ export function RaceTrack({
   );
 
   const innerSidePaths = useMemo(
-    () => buildInnerSidePaths(innerSideSegments, bezierSegments, segmentArcLength, totalArcLength, spaces.length),
-    [innerSideSegments, bezierSegments, segmentArcLength, totalArcLength, spaces.length]
+    () => buildInnerSidePaths(innerSideSegments, bezierSegments, segmentArcLength, totalArcLength, spaces.length, halfTrackWidth),
+    [innerSideSegments, bezierSegments, segmentArcLength, totalArcLength, spaces.length, halfTrackWidth]
   );
 
   const spaceCountdowns = useMemo(
@@ -560,18 +569,18 @@ export function RaceTrack({
   }, [corners]);
 
   const segmentLines = useMemo(
-    () => computeSegmentLines(closed, segments, bezierSegments, segmentArcLength),
-    [closed, segments, bezierSegments, segmentArcLength]
+    () => computeSegmentLines(closed, segments, bezierSegments, segmentArcLength, halfTrackWidth),
+    [closed, segments, bezierSegments, segmentArcLength, halfTrackWidth]
   );
 
   const cornerVisuals = useMemo(
-    () => computeCornerVisuals(closed, corners, spaces, bezierSegments, segmentArcLength),
-    [closed, corners, spaces, bezierSegments, segmentArcLength]
+    () => computeCornerVisuals(closed, corners, spaces, bezierSegments, segmentArcLength, halfTrackWidth, flagOffset),
+    [closed, corners, spaces, bezierSegments, segmentArcLength, halfTrackWidth, flagOffset]
   );
 
   const startFinishVisual = useMemo(
-    () => buildStartFinishVisual(bezierSegments, segmentArcLength, startFinishSpaceIndex),
-    [bezierSegments, segmentArcLength, startFinishSpaceIndex]
+    () => buildStartFinishVisual(bezierSegments, segmentArcLength, startFinishSpaceIndex, halfTrackWidth, flagOffset),
+    [bezierSegments, segmentArcLength, startFinishSpaceIndex, halfTrackWidth, flagOffset]
   );
 
   const dashPattern = useMemo(
