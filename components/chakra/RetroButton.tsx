@@ -16,8 +16,7 @@ export function RetroButton({ children, isActive, isToggled, ...props }: RetroBu
     borderColor: 'black',
     boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.45)',
     _hover: { transform: 'translateY(-1px)' },
-    textTransform: 'uppercase' as const,
-    px: '4px',
+    textTransform: 'uppercase' as const,   
     // Enhanced styling for toggle states
     ...(isActive && {
       bg: 'blue.500',
@@ -39,6 +38,7 @@ export function RetroButton({ children, isActive, isToggled, ...props }: RetroBu
         bg: 'green.600',
       },
     }),
+    px: '8px',
     ...props,
   };
 

@@ -177,28 +177,19 @@ export function Toolbar({
       <VStack align="stretch" gap={3}>
         {/* Mode Status Bar (gauge + checkered flag) */}
         <HStack align="center" justify="center">
-          {/* small racing stripe accent */}
-          <Box
-            bgGradient="linear(to-b, blackAlpha.900, yellow.400)"
-            borderRadius="2px"
-            boxShadow="inset 0 -2px 0 rgba(0,0,0,0.6)"
-            height="28px"
-            mr={2}
-            width="8px"
-          />
 
           {/* Checkered flag patch (SVG tile for crisp squares) */}
           <Box
             backgroundImage={`url("data:image/svg+xml;utf8,${checkeredSvg}")`}
             backgroundPosition="0 0"
             backgroundRepeat="repeat"
-            backgroundSize="8px 8px"
+            backgroundSize="20px 20px"
             border="1px solid rgba(0,0,0,0.25)"
             borderRadius="2px"
             boxShadow="inset 0 -2px 0 rgba(0,0,0,0.4)"
-            height="28px"
+            height="40px"
             mr={2}
-            width="40px"
+            width="60px"
           />
 
           {/* Gauge circle */}
@@ -207,7 +198,7 @@ export function Toolbar({
               alignItems="center"
               bgGradient="radial(circle at 30% 30%, whiteAlpha.600, gray.200 30%, gray.100 60%, gray.300)"
               border="3px solid"
-              borderColor="#444"
+              borderColor="yellow.600"
               borderRadius="full"
               boxShadow="inset 0 -6px 0 rgba(0,0,0,0.35), 0 3px 0 rgba(0,0,0,0.6)"
               display="flex"
@@ -215,13 +206,13 @@ export function Toolbar({
               justifyContent="center"
               width="56px"
             >
-              <Text fontSize="xs" fontWeight="bold" lineHeight="1" textAlign="center">
+              <Text fontSize="20px" fontWeight="bold" lineHeight="1" textAlign="center">
                 {editingMode === 'spline' ? '✏️' : editingMode === 'corners' ? '🏁' : '📋'}
               </Text>
             </Box>
 
             <Box>
-              <Text color="yellow.200" fontSize="sm" fontWeight="bold" letterSpacing="0.06em" textTransform="uppercase">
+              <Text color="grey.100" fontSize="sm" fontWeight="bold" letterSpacing="0.06em" textTransform="uppercase">
                 {modeInfo.text}
               </Text>
               <Text color="gray.300" fontSize="xs">
@@ -231,38 +222,24 @@ export function Toolbar({
           </HStack>
         </HStack>
 
-        {/* Main Controls Row */}
-        <HStack gap={4} justify="center" wrap="wrap">
-          {/* Race Segments */}
-          <HStack gap={2}>
-            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-              Spaces:
-            </Text>
-            <RetroInput
-              min={1}
-              size="sm"
-              type="number"
-              value={raceSegments}
-              width="80px"
-              onChange={handleRaceSegmentsChange}
-            />
-          </HStack>
+        {/* Main Controls Row + Editing Controls Row */}
+  <VStack align="stretch" gap={2}>
+          <HStack gap={4} justify="center" wrap="wrap">
+            {/* Race Segments */}
+            <HStack gap={2}>
+              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                Spaces:
+              </Text>
+              <RetroInput
+                min={1}
+                size="sm"
+                type="number"
+                value={raceSegments}
+                width="80px"
+                onChange={handleRaceSegmentsChange}
+              />
+            </HStack>
 
-          {/* Track Width */}
-          <HStack gap={2}>
-            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-              Width:
-            </Text>
-            <RetroInput
-              max={300}
-              min={20}
-              size="sm"
-              type="number"
-              value={trackWidth}
-              width="80px"
-              onChange={handleTrackWidthChange}
-            />
-          </HStack>
 
           {/* Editing Mode Buttons */}
           <HStack gap={2}>
@@ -292,83 +269,53 @@ export function Toolbar({
             </RetroButton>
           </HStack>
 
-          {/* Visual Toggles */}
-          <HStack gap={2}>
-            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-              Show:
-            </Text>
-            <HStack gap={1}>
-              <RetroButton colorScheme={showSpaces ? 'blue' : 'gray'} size="sm" onClick={onToggleSpaces}>
-                {showSpaces ? <FaEye /> : <FaEyeSlash />} Spaces
+            {/* Editing Mode Buttons */}
+            <HStack gap={2}>
+              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                Mode:
+              </Text>
+              <RetroButton
+                colorScheme="yellow"
+                size="sm"
+                variant={editingMode === 'spline' ? 'solid' : 'outline'}
+                onClick={() => onEditingModeChange('spline')}
+              >
+                {editingMode === 'spline' && '✓ '}Spline
               </RetroButton>
-              <RetroButton colorScheme={showCorners ? 'orange' : 'gray'} size="sm" onClick={onToggleCorners}>
-                {showCorners ? <FaEye /> : <FaEyeSlash />} Corners
+              <RetroButton
+                colorScheme="orange"
+                size="sm"
+                variant={editingMode === 'corners' ? 'solid' : 'outline'}
+                onClick={() => onEditingModeChange('corners')}
+              >
+                {editingMode === 'corners' && '✓ '}Corners
               </RetroButton>
-              <RetroButton colorScheme={showStartFinish ? 'blue' : 'gray'} size="sm" onClick={onToggleStartFinish}>
-                {showStartFinish ? <FaEye /> : <FaEyeSlash />} Start/Finish
+              <RetroButton
+                colorScheme="red"
+                size="sm"
+                variant={editingMode === 'metadata' ? 'solid' : 'outline'}
+                onClick={() => onEditingModeChange('metadata')}
+              >
+                {editingMode === 'metadata' && '✓ '}Metadata
               </RetroButton>
             </HStack>
-          </HStack>
 
-          {/* Image Controls */}
-          <Input ref={fileInputRef} accept="image/*" display="none" type="file" onChange={handleFileChange} />
-          {hasImage ? (
-            <RetroButton colorScheme="orange" size="sm" onClick={onImageRemove}>
-              <FaTimes /> Remove Image
-            </RetroButton>
-          ) : (
-            <RetroButton
-              colorScheme="green"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <FaImage /> Add Image
-            </RetroButton>
-          )}
-
-          <RetroButton colorScheme="red" size="sm" onClick={onClear}>
-            <FaTrash /> Clear All
-          </RetroButton>
-
-          {/* Manual Point Controls */}
-          {editingMode === 'spline' && (
-            <>
-              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                Click on spline to add points
-              </Text>
-              {selectedPointIndex !== null && (
-                <RetroButton colorScheme="red" size="sm" title="Remove selected point" onClick={onRemoveSelectedPoint}>
-                  - Remove Point
-                </RetroButton>
-              )}
-            </>
-          )}
-
-          {/* Corner/metadata hints */}
-          {editingMode === 'corners' && !selectedCorner && (
-            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Click on spaces to add corners</Text>
-          )}
-          {editingMode === 'metadata' && (
-            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Click on spaces to place Start/Finish line</Text>
-          )}
-        </HStack>
-
-        {/* Corner Editing Controls */}
-        {editingMode === 'corners' && selectedCorner && (
-          <HStack gap={4} justify="center" wrap="wrap">
-            <Text fontSize="sm" fontWeight="bold">Corner at Space {selectedCorner.spaceIndex}:</Text>
-
+            {/* Visual Toggles */}
             <HStack gap={2}>
-              <Text fontSize="sm" whiteSpace="nowrap">Speed Limit:</Text>
-              <RetroInput
-                max={20}
-                min={1}
-                size="sm"
-                type="number"
-                value={selectedCorner.speedLimit}
-                width="70px"
-                onChange={(e) => onCornerUpdate?.({ speedLimit: parseInt(e.target.value, 10) })}
-              />
+              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                Show:
+              </Text>
+              <HStack gap={1}>
+                <RetroButton colorScheme={showSpaces ? 'blue' : 'gray'} size="sm" onClick={onToggleSpaces}>
+                  {showSpaces ? <FaEye /> : <FaEyeSlash />} Spaces
+                </RetroButton>
+                <RetroButton colorScheme={showCorners ? 'orange' : 'gray'} size="sm" onClick={onToggleCorners}>
+                  {showCorners ? <FaEye /> : <FaEyeSlash />} Corners
+                </RetroButton>
+                <RetroButton colorScheme={showStartFinish ? 'blue' : 'gray'} size="sm" onClick={onToggleStartFinish}>
+                  {showStartFinish ? <FaEye /> : <FaEyeSlash />} Start/Finish
+                </RetroButton>
+              </HStack>
             </HStack>
 
             <HStack gap={2}>
@@ -388,42 +335,128 @@ export function Toolbar({
                 Right
               </RetroButton>
             </HStack>
+            {/* Image Controls */}
+            <Input ref={fileInputRef} accept="image/*" display="none" type="file" onChange={handleFileChange} />
+            {hasImage ? (
+              <RetroButton colorScheme="orange" size="sm" onClick={onImageRemove}>
+                <FaTimes /> Remove Image
+              </RetroButton>
+            ) : (
+              <RetroButton
+                colorScheme="green"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <FaImage /> Add Image
+              </RetroButton>
+            )}
 
-            <RetroButton colorScheme="red" size="sm" onClick={onCornerRemove}><FaTrash /> Remove Corner</RetroButton>
+            <RetroButton colorScheme="red" size="sm" onClick={onClear}>
+              <FaTrash /> Clear All
+            </RetroButton>
           </HStack>
-        )}
 
-        {/* Track Metadata Controls */}
-        {trackMetadata && editingMode === 'metadata' && (
-          <VStack align="stretch" gap={4} p={4}>
-            <HStack gap={4} justify="center" wrap="wrap">
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Track Name:</Text>
-                <Input bg="gray.700" border="1px solid" borderColor="gray.600" size="sm" value={trackMetadata.name} width="120px" onChange={(e) => handleMetadataChange('name', e.target.value)} />
+          {/* Editing Controls Row (Manual Point, Corner/metadata hints, Corner Editing, Track Metadata) */}
+          <>
+            {/* Manual Point Controls */}
+            {editingMode === 'spline' && (
+              <HStack gap={2} justify="center" wrap="wrap">
+                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                  Click on spline to add points
+                </Text>
+                {selectedPointIndex !== null && (
+                  <RetroButton colorScheme="red" size="sm" title="Remove selected point" onClick={onRemoveSelectedPoint}>
+                    - Remove Point
+                  </RetroButton>
+                )}
               </HStack>
+            )}
 
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Laps:</Text>
-                <RetroInput min={1} size="sm" type="number" value={trackMetadata.laps} width="60px" onChange={(e) => handleMetadataChange('laps', parseInt(e.target.value, 10))} />
+            {/* Corner/metadata hints */}
+            {editingMode === 'corners' && !selectedCorner && (
+              <HStack gap={2} justify="center" wrap="wrap">
+                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Click on spaces to add corners</Text>
               </HStack>
+            )}
 
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Start/Finish Space:</Text>
-                <RetroInput min={0} size="sm" type="number" value={trackMetadata.startFinishSpaceIndex} width="80px" onChange={(e) => handleMetadataChange('startFinishSpaceIndex', parseInt(e.target.value, 10))} />
-              </HStack>
+            {/* Corner Editing Controls */}
+            {editingMode === 'corners' && selectedCorner && (
+              <HStack gap={4} justify="center" wrap="wrap">
+                <Text fontSize="sm" fontWeight="bold">Corner at Space {selectedCorner.spaceIndex}:</Text>
 
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Heat Cards:</Text>
-                <RetroInput min={0} size="sm" type="number" value={trackMetadata.boardMetadata.heatCardCount} width="60px" onChange={(e) => handleBoardMetadataChange('heatCardCount', parseInt(e.target.value, 10))} />
-              </HStack>
+                <HStack gap={2}>
+                  <Text fontSize="sm" whiteSpace="nowrap">Speed Limit:</Text>
+                  <RetroInput
+                    max={20}
+                    min={1}
+                    size="sm"
+                    type="number"
+                    value={selectedCorner.speedLimit}
+                    width="70px"
+                    onChange={(e) => onCornerUpdate?.({ speedLimit: parseInt(e.target.value, 10) })}
+                  />
+                </HStack>
 
-              <HStack gap={2}>
-                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Stress Cards:</Text>
-                <RetroInput min={0} size="sm" type="number" value={trackMetadata.boardMetadata.stressCardCount} width="60px" onChange={(e) => handleBoardMetadataChange('stressCardCount', parseInt(e.target.value, 10))} />
+                <HStack gap={2}>
+                  <Text fontSize="sm" whiteSpace="nowrap">Inner Side:</Text>
+                  <RetroButton colorScheme={selectedCorner.innerSide === 'left' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'left' })}>Left</RetroButton>
+                  <RetroButton colorScheme={selectedCorner.innerSide === 'right' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'right' })}>Right</RetroButton>
+                </HStack>
+
+                <RetroButton colorScheme="red" size="sm" onClick={onCornerRemove}><FaTrash /> Remove Corner</RetroButton>
               </HStack>
-            </HStack>
-          </VStack>
-        )}
+            )}
+
+            {/* Track Metadata Controls */}
+            {trackMetadata && editingMode === 'metadata' && (
+              <VStack align="stretch" gap={4} p={4}>
+                <HStack gap={4} justify="center" wrap="wrap">
+
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Track Name:</Text>
+                    <Input bg="gray.700" border="1px solid" borderColor="gray.600" size="sm" value={trackMetadata.name} width="120px" onChange={(e) => handleMetadataChange('name', e.target.value)} />
+                  </HStack>
+                            {/* Track Width */}
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Width:
+                    </Text>
+                    <RetroInput
+                      max={300}
+                      min={20}
+                      size="sm"
+                      type="number"
+                      value={trackWidth}
+                      width="80px"
+                      onChange={handleTrackWidthChange}
+                    />
+                  </HStack>
+
+
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Laps:</Text>
+                    <RetroInput min={1} size="sm" type="number" value={trackMetadata.laps} width="60px" onChange={(e) => handleMetadataChange('laps', parseInt(e.target.value, 10))} />
+                  </HStack>
+
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Start/Finish Space:</Text>
+                    <RetroInput min={0} size="sm" type="number" value={trackMetadata.startFinishSpaceIndex} width="80px" onChange={(e) => handleMetadataChange('startFinishSpaceIndex', parseInt(e.target.value, 10))} />
+                  </HStack>
+
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Heat Cards:</Text>
+                    <RetroInput min={0} size="sm" type="number" value={trackMetadata.boardMetadata.heatCardCount} width="60px" onChange={(e) => handleBoardMetadataChange('heatCardCount', parseInt(e.target.value, 10))} />
+                  </HStack>
+
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Stress Cards:</Text>
+                    <RetroInput min={0} size="sm" type="number" value={trackMetadata.boardMetadata.stressCardCount} width="60px" onChange={(e) => handleBoardMetadataChange('stressCardCount', parseInt(e.target.value, 10))} />
+                  </HStack>
+                </HStack>
+              </VStack>
+            )}
+          </>
+        </VStack>
       </VStack>
     </Box>
   );
