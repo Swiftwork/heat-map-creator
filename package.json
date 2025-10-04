@@ -2,7 +2,7 @@
   "name": "heat-map-creator",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.10.3",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

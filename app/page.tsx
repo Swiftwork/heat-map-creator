@@ -1,9 +1,7 @@
-import { Box, Text } from "@chakra-ui/react";
+"use client";
+
+import { SplineEditor } from "@/components/SplineEditor";
 
 export default function Home() {
-  return (
-    <Box>
-      <Text>Hello World</Text>
-    </Box>
-  );
+  return <SplineEditor />;
 }
