@@ -240,21 +240,7 @@ export function Toolbar({
               />
             </HStack>
 
-          {/* Track Width */}
-          <HStack gap={2}>
-            <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-              Width:
-            </Text>
-            <RetroInput
-              max={300}
-              min={20}
-              size="sm"
-              type="number"
-              value={trackWidth}
-              width="80px"
-              onChange={handleTrackWidthChange}
-            />
-          </HStack>
+
 
             {/* Editing Mode Buttons */}
             <HStack gap={2}>
@@ -381,10 +367,27 @@ export function Toolbar({
             {trackMetadata && editingMode === 'metadata' && (
               <VStack align="stretch" gap={4} p={4}>
                 <HStack gap={4} justify="center" wrap="wrap">
+
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Track Name:</Text>
                     <Input bg="gray.700" border="1px solid" borderColor="gray.600" size="sm" value={trackMetadata.name} width="120px" onChange={(e) => handleMetadataChange('name', e.target.value)} />
                   </HStack>
+                            {/* Track Width */}
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Width:
+                    </Text>
+                    <RetroInput
+                      max={300}
+                      min={20}
+                      size="sm"
+                      type="number"
+                      value={trackWidth}
+                      width="80px"
+                      onChange={handleTrackWidthChange}
+                    />
+                  </HStack>
+
 
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Laps:</Text>
