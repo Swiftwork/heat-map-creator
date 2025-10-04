@@ -45,16 +45,15 @@ export function SplineEditor() {
   const [raceSegments, setRaceSegments] = useState(100);
   const [trackWidth, setTrackWidth] = useState(100);
   const [trackColor, setTrackColor] = useState('#3a3a3a');
+  const [baseStrokeWidth, setBaseStrokeWidth] = useState(3);
   
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
-    currentTrack: null,
-    selectedCorner: null,
-    selectedSpace: null,
-    showSpaces: true,
-    showCorners: true,
-    showStartFinish: true,
-    editingMode: 'spline',
+  currentTrack: null,
+  selectedCorner: null,
+  selectedSpace: null,
+  debugMode: false,
+  editingMode: 'spline',
   });
 
   // Update dimensions on mount and resize
@@ -82,15 +81,31 @@ export function SplineEditor() {
     };
   }, []);
 
-  // Restore race segments and track width from saved track data
+  // Restore race segments, track width, and editor state from saved track data
   useEffect(() => {
-    if (isLoaded && trackData?.discretizationSettings) {
-      const savedSegments = trackData.discretizationSettings.targetSpacesPerLap;
-      const savedTrackWidth = trackData.discretizationSettings.trackWidth;
-      if (savedSegments) setRaceSegments(savedSegments);
-      if (savedTrackWidth) setTrackWidth(savedTrackWidth);
+    if (isLoaded && trackData) {
+      // Restore discretization settings
+      const { discretizationSettings } = trackData;
+      if (discretizationSettings) {
+        const savedSegments = discretizationSettings.targetSpacesPerLap;
+        const savedTrackWidth = discretizationSettings.trackWidth;
+        if (savedSegments) setRaceSegments(savedSegments);
+        if (savedTrackWidth) setTrackWidth(savedTrackWidth);
+      }
+
+      // Initialize editor state with saved track data while preserving current mode
+      setEditorState(prev => ({
+  ...prev,
+  currentTrack: trackData,
+  debugMode: prev.debugMode ?? false,
+      }));
+      
+      // Select the spline path if it exists and we're in spline mode
+      if (trackData.splinePath) {
+        setSelectedPathId(prev => prev ?? trackData.splinePath.id);
+      }
     }
-  }, [isLoaded, trackData?.discretizationSettings]);
+  }, [isLoaded, trackData]);
 
   const getSvgPoint = useCallback((clientX: number, clientY: number): Point => {
     if (!svgRef.current) return { x: clientX, y: clientY };
@@ -389,16 +404,8 @@ export function SplineEditor() {
   }, [trackData, setTrackData]);
 
   // Toggle visibility handlers
-  const handleToggleSpaces = useCallback(() => {
-    setEditorState(prev => ({ ...prev, showSpaces: !prev.showSpaces }));
-  }, []);
-
-  const handleToggleCorners = useCallback(() => {
-    setEditorState(prev => ({ ...prev, showCorners: !prev.showCorners }));
-  }, []);
-
-  const handleToggleStartFinish = useCallback(() => {
-    setEditorState(prev => ({ ...prev, showStartFinish: !prev.showStartFinish }));
+  const handleDebugMode = useCallback(() => {
+    setEditorState(prev => ({ ...prev, debugMode: !prev.debugMode }));
   }, []);
 
   // Editing mode handler
@@ -673,15 +680,14 @@ export function SplineEditor() {
         {isLoaded && trackData && (
           <RaceTrack
             key={`track-${trackData.id}`}
+            baseStrokeWidth={baseStrokeWidth}
             closed={trackData.splinePath.closed}
             corners={trackData.corners}
+            debugMode={editorState.debugMode}
             editingMode={editorState.editingMode}
             points={trackData.splinePath.points || []}
             segments={raceSegments}
             selectedCorner={editorState.selectedCorner}
-            showCorners={editorState.showCorners}
-            showSpaces={editorState.showSpaces}
-            showStartFinish={editorState.showStartFinish}
             spaces={trackData.spaces}
             startFinishSpaceIndex={trackData.metadata.startFinishSpaceIndex}
             trackColor={trackColor}
@@ -730,17 +736,17 @@ export function SplineEditor() {
       </svg>
 
       <Toolbar
+        baseStrokeWidth={baseStrokeWidth}
+        debugMode={editorState.debugMode}
         editingMode={editorState.editingMode}
         hasImage={!!backgroundImage}
         raceSegments={raceSegments}
         selectedCorner={trackData?.corners.find(c => c.id === editorState.selectedCorner)}
         selectedPointIndex={selectedPointIndex}
-        showCorners={editorState.showCorners}
-        showSpaces={editorState.showSpaces}
-        showStartFinish={editorState.showStartFinish}
         trackColor={trackColor}
         trackMetadata={trackData?.metadata}
         trackWidth={trackWidth}
+        onBaseStrokeWidthChange={setBaseStrokeWidth}
         onClear={handleClear}
         onCornerRemove={handleRemoveCorner}
         onCornerUpdate={handleUpdateCorner}
@@ -750,9 +756,7 @@ export function SplineEditor() {
         onMetadataChange={handleMetadataChange}
         onRaceSegmentsChange={handleRaceSegmentsChange}
         onRemoveSelectedPoint={handleRemoveSelectedPoint}
-        onToggleCorners={handleToggleCorners}
-        onToggleSpaces={handleToggleSpaces}
-        onToggleStartFinish={handleToggleStartFinish}
+        onToggleDebug={handleDebugMode}
         onTrackColorChange={setTrackColor}
         onTrackWidthChange={handleTrackWidthChange}
       />

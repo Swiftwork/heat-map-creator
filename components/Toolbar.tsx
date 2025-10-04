@@ -9,7 +9,7 @@ import {
   VStack
 } from "@chakra-ui/react";
 import React, { useRef } from "react";
-import { FaEye, FaEyeSlash, FaImage, FaTimes, FaTrash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaFlagCheckered, FaImage, FaTrash, FaX } from "react-icons/fa6";
 import { RetroButton } from './chakra/RetroButton';
 import { RetroColorInput } from './chakra/RetroColorInput';
 import { RetroInput } from './chakra/RetroInput';
@@ -23,15 +23,13 @@ interface ToolbarProps {
   hasImage: boolean;
   trackWidth: number;
   onTrackWidthChange: (value: number) => void;
+  baseStrokeWidth: number;
+  onBaseStrokeWidthChange: (value: number) => void;
   raceSegments: number;
   onRaceSegmentsChange: (value: number) => void;
   // New props for Section B features
-  showSpaces: boolean;
-  showCorners: boolean;
-  showStartFinish: boolean;
-  onToggleSpaces: () => void;
-  onToggleCorners: () => void;
-  onToggleStartFinish: () => void;
+  debugMode: boolean;
+  onToggleDebug: () => void;
   editingMode: 'spline' | 'corners' | 'metadata' | 'appearance';
   onEditingModeChange: (mode: 'spline' | 'corners' | 'metadata' | 'appearance') => void;
   trackColor?: string;
@@ -65,13 +63,11 @@ export function Toolbar({
   onRaceSegmentsChange,
   trackWidth,
   onTrackWidthChange,
+  baseStrokeWidth: baseStrokeWidth,
+  onBaseStrokeWidthChange: onBaseStrokeWidthChange,
   hasImage,
-  showSpaces,
-  showCorners,
-  showStartFinish,
-  onToggleSpaces,
-  onToggleCorners,
-  onToggleStartFinish,
+  debugMode,
+  onToggleDebug,
   editingMode,
   onEditingModeChange,
   trackMetadata,
@@ -214,7 +210,7 @@ export function Toolbar({
               width="56px"
             >
               <Text fontSize="20px" fontWeight="bold" lineHeight="1" textAlign="center">
-                {editingMode === 'spline' ? '✏️' : editingMode === 'corners' ? '🏁' : editingMode === 'metadata' ? '📋' : '🎨'}
+                {editingMode === 'spline' ? '✏️' : editingMode === 'corners' ? '⚠️' : editingMode === 'metadata' ? '📋' : '🎨'}
               </Text>
             </Box>
 
@@ -242,46 +238,38 @@ export function Toolbar({
               size="sm"
               onClick={() => onEditingModeChange('spline')}
             >
-              {editingMode === 'spline' && '✓ '}Spline
+              {editingMode === 'spline' && <FaFlagCheckered/>} Spline
             </RetroButton>
             <RetroButton
               isToggled={editingMode === 'corners'}
               size="sm"
               onClick={() => onEditingModeChange('corners')}
             >
-              {editingMode === 'corners' && '✓ '}Corners
+              {editingMode === 'corners' && <FaFlagCheckered/>}Corners
             </RetroButton>
             <RetroButton
               isToggled={editingMode === 'metadata'}
               size="sm"
               onClick={() => onEditingModeChange('metadata')}
             >
-              {editingMode === 'metadata' && '✓ '}Metadata
+              {editingMode === 'metadata' && <FaFlagCheckered/>}Metadata
             </RetroButton>
             <RetroButton
               isToggled={editingMode === 'appearance'}
               size="sm"
               onClick={() => onEditingModeChange('appearance')}
             >
-              {editingMode === 'appearance' && '✓ '}Appearance
+              {editingMode === 'appearance' && <FaFlagCheckered/>}Appearance
             </RetroButton>
           </HStack>
 
             {/* Visual Toggles */}
             <HStack gap={2}>
-              <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                Show:
-              </Text>
               <HStack gap={1}>
-                <RetroButton colorScheme={showSpaces ? 'blue' : 'gray'} size="sm" onClick={onToggleSpaces}>
-                  {showSpaces ? <FaEye /> : <FaEyeSlash />} Spaces
+                <RetroButton colorScheme={debugMode ? 'blue' : 'gray'} size="sm" onClick={onToggleDebug}>
+                  {debugMode ? <FaEye /> : <FaEyeSlash />} Debug
                 </RetroButton>
-                <RetroButton colorScheme={showCorners ? 'orange' : 'gray'} size="sm" onClick={onToggleCorners}>
-                  {showCorners ? <FaEye /> : <FaEyeSlash />} Corners
-                </RetroButton>
-                <RetroButton colorScheme={showStartFinish ? 'blue' : 'gray'} size="sm" onClick={onToggleStartFinish}>
-                  {showStartFinish ? <FaEye /> : <FaEyeSlash />} Start/Finish
-                </RetroButton>
+                {/* Corners toggle removed */}
               </HStack>
             </HStack>
 
@@ -289,7 +277,7 @@ export function Toolbar({
             <Input ref={fileInputRef} accept="image/*" display="none" type="file" onChange={handleFileChange} />
             {hasImage ? (
               <RetroButton colorScheme="orange" size="sm" onClick={onImageRemove}>
-                <FaTimes /> Remove Image
+                <FaX /> Remove Image
               </RetroButton>
             ) : (
               <RetroButton
@@ -312,27 +300,26 @@ export function Toolbar({
             {editingMode === 'spline' && (
               <HStack gap={2} justify="center" wrap="wrap">
                 <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                  Click on spline to add points
+                  Click on spline to add points or selected point to edit
                 </Text>
                 {selectedPointIndex !== null && (
                   <RetroButton colorScheme="red" size="sm" title="Remove selected point" onClick={onRemoveSelectedPoint}>
-                    <FaTrash /> Remove Point
+                    <FaX /> Remove Selected Point
                   </RetroButton>
                 )}
               </HStack>
             )}
 
             {/* Corner/metadata hints */}
-            {editingMode === 'corners' && !selectedCorner && (
+            {editingMode === 'corners' && (
               <HStack gap={2} justify="center" wrap="wrap">
-                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Click on spaces to add corners</Text>
+                <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">Click on space to add corner or select corner to edit</Text>
               </HStack>
             )}
 
             {/* Corner Editing Controls */}
             {editingMode === 'corners' && selectedCorner && (
               <HStack gap={4} justify="center" wrap="wrap">
-                <Text fontSize="sm" fontWeight="bold">Corner at Space {selectedCorner.spaceIndex}:</Text>
 
                 <HStack gap={2}>
                   <Text fontSize="sm" whiteSpace="nowrap">Speed Limit:</Text>
@@ -396,6 +383,20 @@ export function Toolbar({
                       value={trackColor ?? '#3a3a3a'}
                       width="80px"
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => onTrackColorChange?.(e.target.value)}
+                    />
+                  </HStack>
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Edge Width:
+                    </Text>
+                    <RetroInput
+                      max={10}
+                      min={1}
+                      size="sm"
+                      type="number"
+                      value={baseStrokeWidth}
+                      width="80px"
+                      onChange={(e) => onBaseStrokeWidthChange(parseInt(e.target.value, 10))}
                     />
                   </HStack>
                 </HStack>

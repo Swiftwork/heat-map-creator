@@ -20,18 +20,29 @@ const SAMPLES_PER_CURVE = 100;
 const CHECKER_SIZE = 10;
 const FLAG_SIZE = 30;
 
+// Corner and metadata graphics configuration
+const CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
+const CORNER_SELECTED_STROKE_WIDTH = 3;
+const CORNER_DEFAULT_STROKE_WIDTH = 1;
+const CORNER_OPACITY = 0.6;
+const CORNER_COLOR = '#4a9eff';
+const CORNER_DEFAULT_STROKE = '#4a9eff';
+
+const CORNER_SELECTED_COLOR = '#ffe600';
+const METADATA_SELECTED_COLOR = '#009700ff';
+
 interface RaceTrackProps {
   points: BezierPoint[];
   segments: number;
   closed: boolean;
   spaces: Space[];
   corners: Corner[];
-  showSpaces: boolean;
-  showCorners: boolean;
-  showStartFinish: boolean;
+  debugMode: boolean;
+  // showCorners: boolean; // Removed showCorners prop
   startFinishSpaceIndex: number;
   trackWidth?: number;
   trackColor?: string;
+  baseStrokeWidth?: number;
   editingMode?: 'spline' | 'corners' | 'metadata' | 'appearance';
   onSpaceClick?: (spaceIndex: number) => void;
   selectedCorner?: string | null;
@@ -504,34 +515,18 @@ const buildStartFinishVisual = (
   };
 };
 
-const buildDashPattern = (path: string, segments: number) => {
-  const dashLength = Math.max(3, (40 - segments / 10) / 3);
-  const gapLength = dashLength * 0.65;
-  let dashOffset = 0;
-
-  if (typeof document !== 'undefined' && path) {
-    const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    pathElement.setAttribute('d', path);
-    const pathLength = pathElement.getTotalLength();
-    const totalDashUnit = dashLength + gapLength;
-    dashOffset = pathLength > 0 ? (pathLength % totalDashUnit) / 2 : 0;
-  }
-
-  return { dashLength, gapLength, dashOffset };
-};
-
 export function RaceTrack({
   points,
   segments,
   closed,
   spaces,
   corners,
-  showSpaces,
-  showCorners,
-  showStartFinish,
+  debugMode,
+  // showCorners, // Removed showCorners from props
   startFinishSpaceIndex,
   trackWidth = DEFAULT_TRACK_WIDTH,
   trackColor,
+  baseStrokeWidth = 3,
   editingMode = 'spline',
   onSpaceClick,
   selectedCorner,
@@ -600,11 +595,6 @@ export function RaceTrack({
     [bezierSegments, segmentArcLength, startFinishSpaceIndex, halfTrackWidth, flagOffset]
   );
 
-  const dashPattern = useMemo(
-    () => buildDashPattern(centerPath, segments),
-    [centerPath, segments]
-  );
-
   const isCornersMode = editingMode === 'corners';
   const isMetadataMode = editingMode === 'metadata';
 
@@ -614,25 +604,28 @@ export function RaceTrack({
 
   return (
     <g>
+      {/* Outer left edge of the track */}
       <path
         d={outerLeftPath}
         fill="none"
         stroke="white"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={3}
+        strokeWidth={baseStrokeWidth}
       />
 
+      {/* Outer right edge of the track */}
       <path
         d={outerRightPath}
         fill="none"
         stroke="white"
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={3}
+        strokeWidth={baseStrokeWidth}
       />
 
-      {showCorners && innerSidePaths.map(path => (
+  {/* Inner side highlight paths for corners */}
+  {innerSidePaths.map(path => (
         <path
           key={path.key}
           d={path.d}
@@ -640,18 +633,31 @@ export function RaceTrack({
           stroke="white"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth={8}
+          strokeWidth={baseStrokeWidth * 2}
         />
       ))}
 
+      {/* Track fill (main track area) */}
       <path d={trackFillPath} fill={trackColor ?? '#3a3a3a'} stroke="none" />
 
+      {/* Center dashed path */}
+      <path
+        d={centerPath}
+        fill="none"
+        stroke="white"
+        strokeDasharray={`${baseStrokeWidth*3} ${baseStrokeWidth*2}`}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={baseStrokeWidth / 2}
+      />
+      
+      {/* Segment lines across the track */}
       {segmentLines.map((line, index) => (
         <line
           key={`segment-${index}`}
           stroke="white"
           strokeLinecap="round"
-          strokeWidth={2}
+          strokeWidth={baseStrokeWidth}
           x1={line.x1}
           x2={line.x2}
           y1={line.y1}
@@ -659,137 +665,150 @@ export function RaceTrack({
         />
       ))}
 
-      {showSpaces && spaces.map(space => {
-        const position = spacePositions.get(space.index);
-        if (!position) {
-          return null;
-        }
+  {/* Space markers, selection circles */}
+  {debugMode && spaces.map(space => {
+    const position = spacePositions.get(space.index);
+    if (!position) {
+      return null;
+    }
 
-        const countdown = spaceCountdowns.get(space.index);
-        const corner = spaceCornerMap.get(space.index);
-        const hasCorner = Boolean(corner);
-        const isSelectedCorner = corner ? selectedCorner === corner.id : false;
-        const isStartFinish = space.index === startFinishSpaceIndex;
+    const corner = spaceCornerMap.get(space.index);
+    const hasCorner = Boolean(corner);
+    const isSelectedCorner = corner ? selectedCorner === corner.id : false;
+    const isStartFinish = space.index === startFinishSpaceIndex;
 
-        return (
-          <g key={`space-${space.id}`}>
-            {isCornersMode && (
-              <circle
-                cx={position.x}
-                cy={position.y}
-                fill={hasCorner ? '#ff6b6b' : 'transparent'}
-                opacity={0.3}
-                r={12}
-                stroke={isSelectedCorner ? '#ffff00' : hasCorner ? '#ff6b6b' : '#4a9eff'}
-                strokeWidth={isSelectedCorner ? 3 : 1}
-                style={{ cursor: 'pointer' }}
-                onClick={() => onSpaceClick?.(space.index)}
-              />
-            )}
+    return (
+      <g key={`space-${space.id}`}>
+        {/* Small circle at each space */}
+        <circle cx={position.x} cy={position.y} fill={CORNER_COLOR} opacity={0.7} r={3} />
 
-            {isMetadataMode && (
-              <circle
-                cx={position.x}
-                cy={position.y}
-                fill={isStartFinish ? '#00ff00' : 'transparent'}
-                opacity={0.3}
-                r={12}
-                stroke={isStartFinish ? '#00ff00' : '#4a9eff'}
-                strokeWidth={isStartFinish ? 3 : 1}
-                style={{ cursor: 'pointer' }}
-                onClick={() => onStartFinishClick?.(space.index)}
-              />
-            )}
+        {/* Corner/metadata selection circles (interactive) */}
+        {isCornersMode && (
+          <circle
+            cx={position.x}
+            cy={position.y}
+            fill={hasCorner ? CORNER_COLOR : 'transparent'}
+            opacity={CORNER_OPACITY}
+            r={CIRCLE_RADIUS}
+            stroke={isSelectedCorner ? CORNER_SELECTED_COLOR : hasCorner ? CORNER_COLOR : CORNER_DEFAULT_STROKE}
+            strokeWidth={isSelectedCorner ? CORNER_SELECTED_STROKE_WIDTH : CORNER_DEFAULT_STROKE_WIDTH}
+            style={{ cursor: 'pointer' }}
+            onClick={() => onSpaceClick?.(space.index)}
+          />
+        )}
 
-            <circle cx={position.x} cy={position.y} fill="#4a9eff" opacity={0.7} r={3} />
+        {/* Metadata selection circle for start/finish (interactive) */}
+        {isMetadataMode && (
+          <circle
+            cx={position.x}
+            cy={position.y}
+            fill={isStartFinish ? METADATA_SELECTED_COLOR : 'transparent'}
+            opacity={CORNER_OPACITY}
+            r={CIRCLE_RADIUS}
+            stroke={isStartFinish ? METADATA_SELECTED_COLOR : CORNER_DEFAULT_STROKE}
+            strokeWidth={isStartFinish ? CORNER_SELECTED_STROKE_WIDTH : CORNER_DEFAULT_STROKE_WIDTH}
+            style={{ cursor: 'pointer' }}
+            onClick={() => onStartFinishClick?.(space.index)}
+          />
+        )}
 
-            <text
-              fill="#4a9eff"
-              fontSize="10"
-              fontWeight="bold"
-              x={position.x + 8}
-              y={position.y - 8}
-            >
-              {space.index}
-            </text>
+        {/* Space index label */}
+        <text
+          fill="#4a9eff"
+          fontSize="10"
+          fontWeight="bold"
+          x={position.x + 8}
+          y={position.y - 8}
+        >
+          {space.index}
+        </text>
+      </g>
+    );
+  })}
 
-            {countdown !== undefined && countdown >= 0 && (() => {
-              // Calculate perpendicular direction for inside positioning
-              const targetDistance = space.index * segmentArcLength;
-              const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
-              const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
-              const normal = normalizeVector(tangent);
-              
-              if (!normal) {
-                // Fallback to text if normal calculation fails
-                return countdown <= 3 ? (
-                  <CountdownBadge
-                    number={countdown}
-                    x={position.x}
-                    y={position.y + 100}
-                  />
-                ) : (
-                  <text
-                    fill="#ffd700"
-                    fontSize="12"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    x={position.x}
-                    y={position.y + 100}
-                  >
-                    {countdown}
-                  </text>
-                );
-              }
-              
-              const perp = perpendicular(normal);
-              // Position on the inside of the track (opposite direction from outer edge)
-              const insideOffset = -60; // Distance from center line to inside
-              const insideX = position.x - perp.x * insideOffset;
-              const insideY = position.y - perp.y * insideOffset;
-              
-              // Calculate rotation angle from tangent vector (in degrees)
-              const rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
-              
-              // Use CountdownBadge for numbers 0-3, fallback to text for higher numbers
-              if (countdown <= 3) {
-                // Additional offset for CountdownBadge to move it further inside
-                const badgeOffset = -5;
-                const badgeX = insideX - perp.x * badgeOffset;
-                const badgeY = insideY - perp.y * badgeOffset;
-                
-                return (
-                  <CountdownBadge
-                    number={countdown}
-                    rotation={rotation}
-                    x={badgeX}
-                    y={badgeY}
-                  />
-                );
-              } else {
-                return (
-                  <text
-                    fill="#ffd700"
-                    fontSize="12"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    x={insideX}
-                    y={insideY}
-                  >
-                    {countdown}
-                  </text>
-                );
-              }
-            })()}
-          </g>
-        );
-      })}
+  {/* Countdown badges or numbers (for spaces near corners) - always visible */}
+  {spaces.map(space => {
+    const position = spacePositions.get(space.index);
+    if (!position) {
+      return null;
+    }
+    const countdown = spaceCountdowns.get(space.index);
+    if (countdown === undefined || countdown < 0) {
+      return null;
+    }
+    // Calculate perpendicular direction for inside positioning
+    const targetDistance = space.index * segmentArcLength;
+    const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
+    const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
+    const normal = normalizeVector(tangent);
+    if (!normal) {
+      // Fallback to text if normal calculation fails
+      return countdown <= 3 ? (
+        <CountdownBadge
+          key={`countdown-badge-fallback-${space.id}`}
+          number={countdown}
+          x={position.x}
+          y={position.y + 100}
+        />
+      ) : (
+        <text
+          key={`countdown-text-fallback-${space.id}`}
+          fill="#ffd700"
+          fontSize="12"
+          fontWeight="bold"
+          textAnchor="middle"
+          x={position.x}
+          y={position.y + 100}
+        >
+          {countdown}
+        </text>
+      );
+    }
+    const perp = perpendicular(normal);
+    // Position on the inside of the track (opposite direction from outer edge)
+    const insideOffset = -60; // Distance from center line to inside
+    const insideX = position.x - perp.x * insideOffset;
+    const insideY = position.y - perp.y * insideOffset;
+    // Calculate rotation angle from tangent vector (in degrees)
+    const rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
+    // Use CountdownBadge for numbers 0-3, fallback to text for higher numbers
+    if (countdown <= 3) {
+      // Additional offset for CountdownBadge to move it further inside
+      const badgeOffset = -5;
+      const badgeX = insideX - perp.x * badgeOffset;
+      const badgeY = insideY - perp.y * badgeOffset;
+      return (
+        <CountdownBadge
+          key={`countdown-badge-${space.id}`}
+          number={countdown}
+          rotation={rotation}
+          x={badgeX}
+          y={badgeY}
+        />
+      );
+    } else {
+      return (
+        <text
+          key={`countdown-text-${space.id}`}
+          fill="#ffd700"
+          fontSize="12"
+          fontWeight="bold"
+          textAnchor="middle"
+          x={insideX}
+          y={insideY}
+        >
+          {countdown}
+        </text>
+      );
+    }
+  })}
 
-      {showCorners && cornerVisuals.map(({ line }, index) => (
+  {/* Corner lines */}
+  {cornerVisuals.map(({ line }, index) => (
         <line
           key={`corner-line-${index}`}
           stroke="white"
-          strokeWidth={5}
+          strokeWidth={baseStrokeWidth*2}
           x1={line.x1}
           x2={line.x2}
           y1={line.y1}
@@ -797,7 +816,8 @@ export function RaceTrack({
         />
       ))}
 
-      {showCorners && cornerVisuals.map(({ corner, badge, rotation }) => (
+  {/* Corner badges */}
+  {cornerVisuals.map(({ corner, badge, rotation }) => (
         <CornerBadge
           key={`corner-${corner.id}`}
           rotation={rotation}
@@ -807,14 +827,15 @@ export function RaceTrack({
         />
       ))}
 
-      {showStartFinish && startFinishVisual && (
+      {/* Start/finish checkered line and flag */}
+      {startFinishVisual && (
         <g key="start-finish">
           {startFinishVisual.checkers.map((checker, index) => (
             <line
               key={`checker-${index}`}
               stroke={checker.color}
               strokeLinecap="butt"
-              strokeWidth={6}
+              strokeWidth={baseStrokeWidth*2}
               x1={checker.x1}
               x2={checker.x2}
               y1={checker.y1}
@@ -859,16 +880,6 @@ export function RaceTrack({
         </g>
       )}
 
-      <path
-        d={centerPath}
-        fill="none"
-        stroke="white"
-        strokeDasharray={`${dashPattern.dashLength} ${dashPattern.gapLength}`}
-        strokeDashoffset={dashPattern.dashOffset}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-      />
     </g>
   );
 }

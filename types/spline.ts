@@ -147,9 +147,7 @@ export interface EditorState {
   currentTrack: TrackData | null;
   selectedCorner: string | null;
   selectedSpace: string | null;
-  showSpaces: boolean;
-  showCorners: boolean;
-  showStartFinish: boolean;
+  debugMode: boolean;
   editingMode: 'spline' | 'corners' | 'metadata' | 'appearance';
 }
 
