@@ -15,7 +15,7 @@ export function RetroButton({ children, ...props }: RetroButtonProps) {
     boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.45)',
     _hover: { transform: 'translateY(-1px)' },
     textTransform: 'uppercase' as const,
-    px: '4px',
+    px: '8px',
     ...props,
   };
 

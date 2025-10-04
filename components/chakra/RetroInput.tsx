@@ -7,9 +7,9 @@ export function RetroInput(props: InputProps) {
       borderColor="yellow.600"
       borderRadius={0}
       borderWidth={2}
-      boxShadow="inset 0 -3px 0 rgba(0,0,0,0.45)"
       color="white"
       fontFamily="monospace"
+      px = "4px"
       {...props}
     />
   );
