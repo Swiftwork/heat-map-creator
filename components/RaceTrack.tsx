@@ -13,6 +13,7 @@ import {
 import { bezierToSvgPath } from '@/utils/pathUtils';
 
 import { CornerBadge } from './CornerBadge';
+import { CountdownBadge } from './CountdownBadge';
 
 const DEFAULT_TRACK_WIDTH = 100;
 const SAMPLES_PER_CURVE = 100;
@@ -311,7 +312,13 @@ const computeSpaceCountdowns = (corners: Corner[], spaces: Space[]): Map<number,
       spacesToCorner = spaces.length - space.index + nextCorner.spaceIndex;
     }
 
-    countdowns.set(space.index, spacesToCorner);
+    // Start countdown at 0 and exclude the last number (don't show countdown at the corner itself)
+    const countdownValue = Math.max(0, spacesToCorner - 1);
+    
+    // Show countdown including 0 (exclude only the corner space itself)
+    if (countdownValue >= 0) {
+      countdowns.set(space.index, countdownValue);
+    }
   });
 
   return countdowns;
@@ -704,18 +711,74 @@ export function RaceTrack({
               {space.index}
             </text>
 
-            {countdown !== undefined && countdown > 0 && (
-              <text
-                fill="#ffd700"
-                fontSize="12"
-                fontWeight="bold"
-                textAnchor="middle"
-                x={position.x}
-                y={position.y + 20}
-              >
-                {countdown}
-              </text>
-            )}
+            {countdown !== undefined && countdown >= 0 && (() => {
+              // Calculate perpendicular direction for inside positioning
+              const targetDistance = space.index * segmentArcLength;
+              const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
+              const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
+              const normal = normalizeVector(tangent);
+              
+              if (!normal) {
+                // Fallback to text if normal calculation fails
+                return countdown <= 3 ? (
+                  <CountdownBadge
+                    number={countdown}
+                    x={position.x}
+                    y={position.y + 100}
+                  />
+                ) : (
+                  <text
+                    fill="#ffd700"
+                    fontSize="12"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    x={position.x}
+                    y={position.y + 100}
+                  >
+                    {countdown}
+                  </text>
+                );
+              }
+              
+              const perp = perpendicular(normal);
+              // Position on the inside of the track (opposite direction from outer edge)
+              const insideOffset = -60; // Distance from center line to inside
+              const insideX = position.x - perp.x * insideOffset;
+              const insideY = position.y - perp.y * insideOffset;
+              
+              // Calculate rotation angle from tangent vector (in degrees)
+              const rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
+              
+              // Use CountdownBadge for numbers 0-3, fallback to text for higher numbers
+              if (countdown <= 3) {
+                // Additional offset for CountdownBadge to move it further inside
+                const badgeOffset = -5;
+                const badgeX = insideX - perp.x * badgeOffset;
+                const badgeY = insideY - perp.y * badgeOffset;
+                
+                return (
+                  <CountdownBadge
+                    number={countdown}
+                    rotation={rotation}
+                    x={badgeX}
+                    y={badgeY}
+                  />
+                );
+              } else {
+                return (
+                  <text
+                    fill="#ffd700"
+                    fontSize="12"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    x={insideX}
+                    y={insideY}
+                  >
+                    {countdown}
+                  </text>
+                );
+              }
+            })()}
           </g>
         );
       })}
