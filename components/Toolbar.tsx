@@ -318,23 +318,6 @@ export function Toolbar({
               </HStack>
             </HStack>
 
-            <HStack gap={2}>
-              <Text fontSize="sm" whiteSpace="nowrap">Inner Side:</Text>
-              <RetroButton 
-                isActive={selectedCorner.innerSide === 'left'} 
-                size="sm" 
-                onClick={() => onCornerUpdate?.({ innerSide: 'left' })}
-              >
-                Left
-              </RetroButton>
-              <RetroButton 
-                isActive={selectedCorner.innerSide === 'right'} 
-                size="sm" 
-                onClick={() => onCornerUpdate?.({ innerSide: 'right' })}
-              >
-                Right
-              </RetroButton>
-            </HStack>
             {/* Image Controls */}
             <Input ref={fileInputRef} accept="image/*" display="none" type="file" onChange={handleFileChange} />
             {hasImage ? (
@@ -399,8 +382,20 @@ export function Toolbar({
 
                 <HStack gap={2}>
                   <Text fontSize="sm" whiteSpace="nowrap">Inner Side:</Text>
-                  <RetroButton colorScheme={selectedCorner.innerSide === 'left' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'left' })}>Left</RetroButton>
-                  <RetroButton colorScheme={selectedCorner.innerSide === 'right' ? 'blue' : 'gray'} size="sm" onClick={() => onCornerUpdate?.({ innerSide: 'right' })}>Right</RetroButton>
+                  <RetroButton 
+                    isActive={selectedCorner.innerSide === 'left'} 
+                    size="sm" 
+                    onClick={() => onCornerUpdate?.({ innerSide: 'left' })}
+                  >
+                    Left
+                  </RetroButton>
+                  <RetroButton 
+                    isActive={selectedCorner.innerSide === 'right'} 
+                    size="sm" 
+                    onClick={() => onCornerUpdate?.({ innerSide: 'right' })}
+                  >
+                    Right
+                  </RetroButton>
                 </HStack>
 
                 <RetroButton colorScheme="red" size="sm" onClick={onCornerRemove}><FaTrash /> Remove Corner</RetroButton>
