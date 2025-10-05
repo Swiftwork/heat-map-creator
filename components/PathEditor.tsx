@@ -15,7 +15,7 @@ interface PathEditorProps {
     index: number,
     type: "in" | "out",
     x: number,
-    y: number
+    y: number,
   ) => void;
   onPathClick: () => void;
   onPointClick: (index: number) => void;
@@ -68,41 +68,124 @@ export function PathEditor({
         points.map((point, index) => {
           const isPointSelected = selectedPointIndex === index;
           return (
-          <g key={index}>
-            {/* Handle lines */}
-            {isPointSelected && point.handleIn && (
-              <line
-                stroke="#4299e1"
-                strokeDasharray="4 2"
-                strokeWidth={1}
-                x1={point.x}
-                x2={point.handleIn.x}
-                y1={point.y}
-                y2={point.handleIn.y}
-              />
-            )}
-            {isPointSelected && point.handleOut && (
-              <line
-                stroke="#4299e1"
-                strokeDasharray="4 2"
-                strokeWidth={1}
-                x1={point.x}
-                x2={point.handleOut.x}
-                y1={point.y}
-                y2={point.handleOut.y}
-              />
-            )}
+            <g key={index}>
+              {/* Handle lines */}
+              {isPointSelected && point.handleIn && (
+                <line
+                  stroke="#4299e1"
+                  strokeDasharray="4 2"
+                  strokeWidth={1}
+                  x1={point.x}
+                  x2={point.handleIn.x}
+                  y1={point.y}
+                  y2={point.handleIn.y}
+                />
+              )}
+              {isPointSelected && point.handleOut && (
+                <line
+                  stroke="#4299e1"
+                  strokeDasharray="4 2"
+                  strokeWidth={1}
+                  x1={point.x}
+                  x2={point.handleOut.x}
+                  y1={point.y}
+                  y2={point.handleOut.y}
+                />
+              )}
 
-            {/* Handle in control */}
-            {isPointSelected && point.handleIn && (
+              {/* Handle in control */}
+              {isPointSelected && point.handleIn && (
+                <circle
+                  cx={point.handleIn.x}
+                  cy={point.handleIn.y}
+                  fill="#4299e1"
+                  r={4}
+                  stroke="white"
+                  strokeWidth={2}
+                  style={{ cursor: "move" }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      const svg = (e.target as SVGElement).ownerSVGElement;
+                      if (!svg) return;
+
+                      const pt = svg.createSVGPoint();
+                      pt.x = moveEvent.clientX;
+                      pt.y = moveEvent.clientY;
+                      const svgP = pt.matrixTransform(
+                        svg.getScreenCTM()?.inverse(),
+                      );
+
+                      onHandleDrag(index, "in", svgP.x, svgP.y);
+                    };
+
+                    const handleMouseUp = () => {
+                      document.removeEventListener(
+                        "mousemove",
+                        handleMouseMove,
+                      );
+                      document.removeEventListener("mouseup", handleMouseUp);
+                    };
+
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
+                  }}
+                />
+              )}
+
+              {/* Handle out control */}
+              {isPointSelected && point.handleOut && (
+                <circle
+                  cx={point.handleOut.x}
+                  cy={point.handleOut.y}
+                  fill="#4299e1"
+                  r={4}
+                  stroke="white"
+                  strokeWidth={2}
+                  style={{ cursor: "move" }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      const svg = (e.target as SVGElement).ownerSVGElement;
+                      if (!svg) return;
+
+                      const pt = svg.createSVGPoint();
+                      pt.x = moveEvent.clientX;
+                      pt.y = moveEvent.clientY;
+                      const svgP = pt.matrixTransform(
+                        svg.getScreenCTM()?.inverse(),
+                      );
+
+                      onHandleDrag(index, "out", svgP.x, svgP.y);
+                    };
+
+                    const handleMouseUp = () => {
+                      document.removeEventListener(
+                        "mousemove",
+                        handleMouseMove,
+                      );
+                      document.removeEventListener("mouseup", handleMouseUp);
+                    };
+
+                    document.addEventListener("mousemove", handleMouseMove);
+                    document.addEventListener("mouseup", handleMouseUp);
+                  }}
+                />
+              )}
+
+              {/* Main point */}
               <circle
-                cx={point.handleIn.x}
-                cy={point.handleIn.y}
-                fill="#4299e1"
-                r={4}
-                stroke="white"
+                cx={point.x}
+                cy={point.y}
+                fill="white"
+                r={6}
+                stroke={color}
                 strokeWidth={2}
                 style={{ cursor: "move" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPointClick(index);
+                }}
                 onMouseDown={(e) => {
                   e.stopPropagation();
                   const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -113,10 +196,10 @@ export function PathEditor({
                     pt.x = moveEvent.clientX;
                     pt.y = moveEvent.clientY;
                     const svgP = pt.matrixTransform(
-                      svg.getScreenCTM()?.inverse()
+                      svg.getScreenCTM()?.inverse(),
                     );
 
-                    onHandleDrag(index, "in", svgP.x, svgP.y);
+                    onPointDrag(index, svgP.x, svgP.y);
                   };
 
                   const handleMouseUp = () => {
@@ -128,85 +211,8 @@ export function PathEditor({
                   document.addEventListener("mouseup", handleMouseUp);
                 }}
               />
-            )}
-
-            {/* Handle out control */}
-            {isPointSelected && point.handleOut && (
-              <circle
-                cx={point.handleOut.x}
-                cy={point.handleOut.y}
-                fill="#4299e1"
-                r={4}
-                stroke="white"
-                strokeWidth={2}
-                style={{ cursor: "move" }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  const handleMouseMove = (moveEvent: MouseEvent) => {
-                    const svg = (e.target as SVGElement).ownerSVGElement;
-                    if (!svg) return;
-
-                    const pt = svg.createSVGPoint();
-                    pt.x = moveEvent.clientX;
-                    pt.y = moveEvent.clientY;
-                    const svgP = pt.matrixTransform(
-                      svg.getScreenCTM()?.inverse()
-                    );
-
-                    onHandleDrag(index, "out", svgP.x, svgP.y);
-                  };
-
-                  const handleMouseUp = () => {
-                    document.removeEventListener("mousemove", handleMouseMove);
-                    document.removeEventListener("mouseup", handleMouseUp);
-                  };
-
-                  document.addEventListener("mousemove", handleMouseMove);
-                  document.addEventListener("mouseup", handleMouseUp);
-                }}
-              />
-            )}
-
-            {/* Main point */}
-            <circle
-              cx={point.x}
-              cy={point.y}
-              fill="white"
-              r={6}
-              stroke={color}
-              strokeWidth={2}
-              style={{ cursor: "move" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPointClick(index);
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                const handleMouseMove = (moveEvent: MouseEvent) => {
-                  const svg = (e.target as SVGElement).ownerSVGElement;
-                  if (!svg) return;
-
-                  const pt = svg.createSVGPoint();
-                  pt.x = moveEvent.clientX;
-                  pt.y = moveEvent.clientY;
-                  const svgP = pt.matrixTransform(
-                    svg.getScreenCTM()?.inverse()
-                  );
-
-                  onPointDrag(index, svgP.x, svgP.y);
-                };
-
-                const handleMouseUp = () => {
-                  document.removeEventListener("mousemove", handleMouseMove);
-                  document.removeEventListener("mouseup", handleMouseUp);
-                };
-
-                document.addEventListener("mousemove", handleMouseMove);
-                document.addEventListener("mouseup", handleMouseUp);
-              }}
-            />
-          </g>
-        );
+            </g>
+          );
         })}
     </g>
   );

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface CountdownBadgeProps {
   number: number;
@@ -7,11 +7,16 @@ interface CountdownBadgeProps {
   rotation?: number;
 }
 
-export function CountdownBadge({ number, x, y, rotation = 0 }: CountdownBadgeProps) {
+export function CountdownBadge({
+  number,
+  x,
+  y,
+  rotation = 0,
+}: CountdownBadgeProps) {
   const size = 25;
   const radius = size / 2;
   const scale = size / 100; // Scale factor from original 100x100 SVG
-  
+
   // Only show for numbers 0-3
   if (number < 0 || number > 3) {
     return null;
@@ -20,15 +25,25 @@ export function CountdownBadge({ number, x, y, rotation = 0 }: CountdownBadgePro
   return (
     <>
       {/* Badge with exact SVG structure */}
-      <g transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}>
-        <rect fill="none" height="96" stroke="black" strokeWidth="5" width="96" x="2" y="2"/>
-        
+      <g
+        transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}
+      >
+        <rect
+          fill="none"
+          height="96"
+          stroke="black"
+          strokeWidth="5"
+          width="96"
+          x="2"
+          y="2"
+        />
+
         {/* Countdown number text */}
         <text
           fill="black"
           style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: `${size * 0.65 / scale}px`,
+            fontFamily: "Inter, sans-serif",
+            fontSize: `${(size * 0.65) / scale}px`,
             fontWeight: 700,
           }}
           textAnchor="middle"

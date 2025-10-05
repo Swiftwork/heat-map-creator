@@ -16,7 +16,7 @@ export interface BezierSegment {
   // Control points are stored relative to start/end points
   cp1: Point; // First control point
   cp2: Point; // Second control point
-  continuity: 'C0' | 'C1' | 'C2'; // Continuity level
+  continuity: "C0" | "C1" | "C2"; // Continuity level
 }
 
 export interface SplinePath {
@@ -34,7 +34,7 @@ export interface SplinePath {
 export interface Spot {
   id: string;
   position: Point;
-  type: 'race-line' | 'outer' | 'inner';
+  type: "race-line" | "outer" | "inner";
   isOccupied: boolean;
   // Additional spot properties for Heat: Pedal to the Metal
   spotIndex: number; // Position within the space (0 = innermost, higher = outer)
@@ -58,7 +58,7 @@ export interface Space {
     curvature: number; // Calculated curvature at this space
     trackWidth: number; // Width of track at this space
     elevation?: number; // Optional elevation change
-    surface?: 'asphalt' | 'gravel' | 'dirt'; // Track surface type
+    surface?: "asphalt" | "gravel" | "dirt"; // Track surface type
   };
 }
 
@@ -68,9 +68,9 @@ export interface Corner {
   speedLimit: number;
   position: Point;
   isAutoSuggested: boolean;
-  innerSide: 'left' | 'right'; // Which side is the inner side (thicker line) from this corner to the next
+  innerSide: "left" | "right"; // Which side is the inner side (thicker line) from this corner to the next
   // Enhanced corner properties
-  cornerType: 'slow' | 'medium' | 'fast' | 'chicane';
+  cornerType: "slow" | "medium" | "fast" | "chicane";
   difficulty: number; // 1-10 difficulty rating
   suggestedGear: number; // Suggested gear for this corner
   heatPenalty: number; // Base heat penalty for exceeding speed limit
@@ -94,7 +94,7 @@ export interface TrackMetadata {
     trackLength: number; // Total track length in meters
     averageSpeed: number; // Average speed rating
     difficulty: number; // Overall track difficulty (1-10)
-    trackType: 'oval' | 'road-course' | 'street-circuit' | 'rally';
+    trackType: "oval" | "road-course" | "street-circuit" | "rally";
     elevationChange: number; // Total elevation change
     // Expansion support
     weatherTokens?: number;
@@ -140,7 +140,11 @@ export interface DrawingState {
   paths: SplinePath[];
   selectedPath: string | null;
   selectedPoint: { pathId: string; pointIndex: number } | null;
-  selectedHandle: { pathId: string; pointIndex: number; type: 'in' | 'out' } | null;
+  selectedHandle: {
+    pathId: string;
+    pointIndex: number;
+    type: "in" | "out";
+  } | null;
 }
 
 export interface EditorState {
@@ -148,7 +152,7 @@ export interface EditorState {
   selectedCorner: string | null;
   selectedSpace: string | null;
   debugMode: boolean;
-  editingMode: 'spline' | 'corners' | 'metadata' | 'appearance';
+  editingMode: "spline" | "corners" | "metadata" | "appearance";
 }
 
 // Serialization and validation types
@@ -158,7 +162,7 @@ export interface TrackExportData {
   exportMetadata: {
     exportedAt: string;
     exportedBy: string;
-    format: 'json' | 'heat-track';
+    format: "json" | "heat-track";
     checksum: string;
   };
 }
@@ -195,6 +199,5 @@ export interface BezierQualityMetrics {
   maxCurvature: number;
   curvatureVariation: number;
   segmentCount: number;
-  continuityLevel: 'C0' | 'C1' | 'C2';
+  continuityLevel: "C0" | "C1" | "C2";
 }
-

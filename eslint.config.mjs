@@ -1,11 +1,10 @@
 import { builtinModules } from "node:module";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { FlatCompat } from "@eslint/eslintrc";
 import prettierConfig from "eslint-config-prettier";
 import sortImportsPlugin from "eslint-plugin-simple-import-sort";
 import unusedImportsPlugin from "eslint-plugin-unused-imports";
-
-import { FlatCompat } from "@eslint/eslintrc";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

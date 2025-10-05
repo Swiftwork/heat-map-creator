@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import { BezierPoint, Corner, Space } from '@/types/spline';
+import { BezierPoint, Corner, Space } from "@/types/spline";
 import {
   calculateChainArcLength,
   calculateChainTangent,
   evaluateChainAtT,
   findTForDistance,
   pointsToBezierSegments,
-} from '@/utils/bezierChain';
-import { bezierToSvgPath } from '@/utils/pathUtils';
+} from "@/utils/bezierChain";
+import { bezierToSvgPath } from "@/utils/pathUtils";
 
-import { CornerBadge } from './CornerBadge';
-import { CountdownBadge } from './CountdownBadge';
+import { CornerBadge } from "./CornerBadge";
+import { CountdownBadge } from "./CountdownBadge";
 
 const DEFAULT_TRACK_WIDTH = 100;
 const SAMPLES_PER_CURVE = 100;
@@ -25,11 +25,11 @@ const CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
 const CORNER_SELECTED_STROKE_WIDTH = 3;
 const CORNER_DEFAULT_STROKE_WIDTH = 1;
 const CORNER_OPACITY = 0.6;
-const CORNER_COLOR = '#4a9eff';
-const CORNER_DEFAULT_STROKE = '#4a9eff';
+const CORNER_COLOR = "#4a9eff";
+const CORNER_DEFAULT_STROKE = "#4a9eff";
 
-const CORNER_SELECTED_COLOR = '#ffe600';
-const METADATA_SELECTED_COLOR = '#009700ff';
+const CORNER_SELECTED_COLOR = "#ffe600";
+const METADATA_SELECTED_COLOR = "#009700ff";
 
 interface RaceTrackProps {
   points: BezierPoint[];
@@ -43,7 +43,7 @@ interface RaceTrackProps {
   trackWidth?: number;
   trackColor?: string;
   baseStrokeWidth?: number;
-  editingMode?: 'spline' | 'corners' | 'metadata' | 'appearance';
+  editingMode?: "spline" | "corners" | "metadata" | "appearance";
   onSpaceClick?: (spaceIndex: number) => void;
   selectedCorner?: string | null;
   onStartFinishClick?: (spaceIndex: number) => void;
@@ -64,7 +64,7 @@ interface SegmentLine {
 interface InnerSideSegment {
   startSpace: number;
   endSpace: number;
-  side: 'left' | 'right';
+  side: "left" | "right";
 }
 
 interface InnerSidePath {
@@ -73,7 +73,7 @@ interface InnerSidePath {
 }
 
 interface CheckerSegment extends SegmentLine {
-  color: 'white' | 'black';
+  color: "white" | "black";
 }
 
 interface StartFinishVisual {
@@ -92,7 +92,13 @@ interface CornerVisual {
   rotation: number;
 }
 
-const evaluateCubicBezier = (p0: Vec2, cp1: Vec2, cp2: Vec2, p1: Vec2, t: number): Vec2 => {
+const evaluateCubicBezier = (
+  p0: Vec2,
+  cp1: Vec2,
+  cp2: Vec2,
+  p1: Vec2,
+  t: number,
+): Vec2 => {
   const t2 = t * t;
   const t3 = t2 * t;
   const mt = 1 - t;
@@ -105,7 +111,13 @@ const evaluateCubicBezier = (p0: Vec2, cp1: Vec2, cp2: Vec2, p1: Vec2, t: number
   };
 };
 
-const evaluateCubicBezierTangent = (p0: Vec2, cp1: Vec2, cp2: Vec2, p1: Vec2, t: number): Vec2 => {
+const evaluateCubicBezierTangent = (
+  p0: Vec2,
+  cp1: Vec2,
+  cp2: Vec2,
+  p1: Vec2,
+  t: number,
+): Vec2 => {
   const t2 = t * t;
   const mt = 1 - t;
   const mt2 = mt * mt;
@@ -143,21 +155,25 @@ const perpendicular = (vector: Vec2): Vec2 => ({
 });
 
 const createPathString = (points: Vec2[], close = false): string => {
-  if (points.length === 0) return '';
+  if (points.length === 0) return "";
 
   const [first, ...rest] = points;
-  if (!first) return '';
+  if (!first) return "";
 
   let path = `M ${first.x} ${first.y}`;
 
-  rest.forEach(point => {
+  rest.forEach((point) => {
     path += ` L ${point.x} ${point.y}`;
   });
 
   return close ? `${path} Z` : path;
 };
 
-const sampleOffsetPoints = (points: BezierPoint[], closed: boolean, offset: number): Vec2[] => {
+const sampleOffsetPoints = (
+  points: BezierPoint[],
+  closed: boolean,
+  offset: number,
+): Vec2[] => {
   const numCurves = closed ? points.length : points.length - 1;
 
   if (numCurves <= 0) {
@@ -176,7 +192,8 @@ const sampleOffsetPoints = (points: BezierPoint[], closed: boolean, offset: numb
 
     const cp1 = current.handleOut ?? current;
     const cp2 = next.handleIn ?? next;
-    const maxSamples = i === numCurves - 1 ? SAMPLES_PER_CURVE + 1 : SAMPLES_PER_CURVE;
+    const maxSamples =
+      i === numCurves - 1 ? SAMPLES_PER_CURVE + 1 : SAMPLES_PER_CURVE;
 
     for (let j = 0; j < maxSamples; j++) {
       const t = Math.min(j / SAMPLES_PER_CURVE, 1);
@@ -200,36 +217,50 @@ const sampleOffsetPoints = (points: BezierPoint[], closed: boolean, offset: numb
   return sampled;
 };
 
-const buildOffsetPath = (points: BezierPoint[], closed: boolean, offset: number): string => {
+const buildOffsetPath = (
+  points: BezierPoint[],
+  closed: boolean,
+  offset: number,
+): string => {
   const sampledPoints = sampleOffsetPoints(points, closed, offset);
   if (sampledPoints.length === 0) {
-    return '';
+    return "";
   }
 
   return createPathString(sampledPoints, closed);
 };
 
-const buildTrackFillPath = (points: BezierPoint[], closed: boolean, halfTrackWidth: number): string => {
+const buildTrackFillPath = (
+  points: BezierPoint[],
+  closed: boolean,
+  halfTrackWidth: number,
+): string => {
   const leftPoints = sampleOffsetPoints(points, closed, halfTrackWidth);
   const rightPoints = sampleOffsetPoints(points, closed, -halfTrackWidth);
 
   if (!leftPoints.length || !rightPoints.length) {
-    return '';
+    return "";
   }
 
   const pathPoints = [...leftPoints, ...rightPoints.reverse()];
   return createPathString(pathPoints, true);
 };
 
-const buildInnerSideSegments = (closed: boolean, corners: Corner[]): InnerSideSegment[] => {
+const buildInnerSideSegments = (
+  closed: boolean,
+  corners: Corner[],
+): InnerSideSegment[] => {
   if (!closed || corners.length === 0) {
     return [];
   }
 
-  const sortedCorners = [...corners].sort((a, b) => a.spaceIndex - b.spaceIndex);
+  const sortedCorners = [...corners].sort(
+    (a, b) => a.spaceIndex - b.spaceIndex,
+  );
 
   return sortedCorners.map((corner, index) => {
-    const nextCorner = sortedCorners[(index + 1) % sortedCorners.length] ?? corner;
+    const nextCorner =
+      sortedCorners[(index + 1) % sortedCorners.length] ?? corner;
 
     return {
       startSpace: corner.spaceIndex,
@@ -245,9 +276,13 @@ const buildInnerSidePaths = (
   segmentArcLength: number,
   totalArcLength: number,
   spacesCount: number,
-  halfTrackWidth: number
+  halfTrackWidth: number,
 ): InnerSidePath[] => {
-  if (segments.length === 0 || bezierSegments.length === 0 || segmentArcLength === 0) {
+  if (
+    segments.length === 0 ||
+    bezierSegments.length === 0 ||
+    segmentArcLength === 0
+  ) {
     return [];
   }
 
@@ -256,13 +291,15 @@ const buildInnerSidePaths = (
     let endDistance = (segment.endSpace - 0.5) * segmentArcLength;
 
     if (segment.endSpace < segment.startSpace) {
-      endDistance = totalArcLength + (segment.endSpace - 0.5) * segmentArcLength;
+      endDistance =
+        totalArcLength + (segment.endSpace - 0.5) * segmentArcLength;
     }
 
     const sectionLength = endDistance - startDistance;
-    const numSpaces = segment.endSpace > segment.startSpace
-      ? segment.endSpace - segment.startSpace
-      : spacesCount - segment.startSpace + segment.endSpace;
+    const numSpaces =
+      segment.endSpace > segment.startSpace
+        ? segment.endSpace - segment.startSpace
+        : spacesCount - segment.startSpace + segment.endSpace;
 
     const numSamples = Math.max(numSpaces * 50, 100);
     const innerPoints: Vec2[] = [];
@@ -275,7 +312,10 @@ const buildInnerSidePaths = (
         targetDistance -= totalArcLength;
       }
 
-      const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
+      const { segmentIndex, t } = findTForDistance(
+        bezierSegments,
+        targetDistance,
+      );
       const centerPoint = evaluateChainAtT(bezierSegments, segmentIndex, t);
       const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
       const normal = normalizeVector(tangent);
@@ -285,7 +325,7 @@ const buildInnerSidePaths = (
       }
 
       const perp = perpendicular(normal);
-      const offset = segment.side === 'left' ? halfTrackWidth : -halfTrackWidth;
+      const offset = segment.side === "left" ? halfTrackWidth : -halfTrackWidth;
       innerPoints.push({
         x: centerPoint.x + perp.x * offset,
         y: centerPoint.y + perp.y * offset,
@@ -305,16 +345,23 @@ const buildInnerSidePaths = (
   }, []);
 };
 
-const computeSpaceCountdowns = (corners: Corner[], spaces: Space[]): Map<number, number> => {
+const computeSpaceCountdowns = (
+  corners: Corner[],
+  spaces: Space[],
+): Map<number, number> => {
   if (corners.length === 0 || spaces.length === 0) {
     return new Map();
   }
 
-  const sortedCorners = [...corners].sort((a, b) => a.spaceIndex - b.spaceIndex);
+  const sortedCorners = [...corners].sort(
+    (a, b) => a.spaceIndex - b.spaceIndex,
+  );
   const countdowns = new Map<number, number>();
 
-  spaces.forEach(space => {
-    const nextCorner = sortedCorners.find(corner => corner.spaceIndex > space.index) ?? sortedCorners[0];
+  spaces.forEach((space) => {
+    const nextCorner =
+      sortedCorners.find((corner) => corner.spaceIndex > space.index) ??
+      sortedCorners[0];
     if (!nextCorner) {
       return;
     }
@@ -326,7 +373,7 @@ const computeSpaceCountdowns = (corners: Corner[], spaces: Space[]): Map<number,
 
     // Start countdown at 0 and exclude the last number (don't show countdown at the corner itself)
     const countdownValue = Math.max(0, spacesToCorner - 1);
-    
+
     // Show countdown including 0 (exclude only the corner space itself)
     if (countdownValue >= 0) {
       countdowns.set(space.index, countdownValue);
@@ -339,7 +386,7 @@ const computeSpaceCountdowns = (corners: Corner[], spaces: Space[]): Map<number,
 const buildSpacePositions = (
   spaces: Space[],
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
-  segmentArcLength: number
+  segmentArcLength: number,
 ): Map<number, Vec2> => {
   const positions = new Map<number, Vec2>();
 
@@ -347,9 +394,12 @@ const buildSpacePositions = (
     return positions;
   }
 
-  spaces.forEach(space => {
+  spaces.forEach((space) => {
     const targetDistance = space.index * segmentArcLength;
-    const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
+    const { segmentIndex, t } = findTForDistance(
+      bezierSegments,
+      targetDistance,
+    );
     const position = evaluateChainAtT(bezierSegments, segmentIndex, t);
     positions.set(space.index, position);
   });
@@ -362,17 +412,29 @@ const computeSegmentLines = (
   segments: number,
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
   segmentArcLength: number,
-  halfTrackWidth: number
+  halfTrackWidth: number,
 ): SegmentLine[] => {
-  if (!closed || segments === 0 || bezierSegments.length === 0 || segmentArcLength === 0) {
+  if (
+    !closed ||
+    segments === 0 ||
+    bezierSegments.length === 0 ||
+    segmentArcLength === 0
+  ) {
     return [];
   }
 
   const lines: SegmentLine[] = [];
 
-  for (let segmentIndexValue = 0; segmentIndexValue < segments; segmentIndexValue++) {
+  for (
+    let segmentIndexValue = 0;
+    segmentIndexValue < segments;
+    segmentIndexValue++
+  ) {
     const targetDistance = (segmentIndexValue + 0.5) * segmentArcLength;
-    const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
+    const { segmentIndex, t } = findTForDistance(
+      bezierSegments,
+      targetDistance,
+    );
     const centerPoint = evaluateChainAtT(bezierSegments, segmentIndex, t);
     const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
     const normal = normalizeVector(tangent);
@@ -400,13 +462,18 @@ const computeCornerVisuals = (
   bezierSegments: ReturnType<typeof pointsToBezierSegments>,
   segmentArcLength: number,
   halfTrackWidth: number,
-  flagOffset: number
+  flagOffset: number,
 ): CornerVisual[] => {
-  if (!closed || corners.length === 0 || bezierSegments.length === 0 || segmentArcLength === 0) {
+  if (
+    !closed ||
+    corners.length === 0 ||
+    bezierSegments.length === 0 ||
+    segmentArcLength === 0
+  ) {
     return [];
   }
 
-  const validSpaces = new Set(spaces.map(space => space.index));
+  const validSpaces = new Set(spaces.map((space) => space.index));
 
   return corners.reduce<CornerVisual[]>((visuals, corner) => {
     if (!validSpaces.has(corner.spaceIndex)) {
@@ -414,7 +481,10 @@ const computeCornerVisuals = (
     }
 
     const targetDistance = (corner.spaceIndex - 0.5) * segmentArcLength;
-    const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
+    const { segmentIndex, t } = findTForDistance(
+      bezierSegments,
+      targetDistance,
+    );
     const centerPoint = evaluateChainAtT(bezierSegments, segmentIndex, t);
     const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
     const normal = normalizeVector(tangent);
@@ -431,7 +501,7 @@ const computeCornerVisuals = (
       y2: centerPoint.y - perp.y * halfTrackWidth,
     };
 
-    const badgeOffset = corner.innerSide === 'left' ? -1 : 1;
+    const badgeOffset = corner.innerSide === "left" ? -1 : 1;
     const badge: Vec2 = {
       x: centerPoint.x + perp.x * badgeOffset * flagOffset,
       y: centerPoint.y + perp.y * badgeOffset * flagOffset,
@@ -440,7 +510,7 @@ const computeCornerVisuals = (
     // Calculate rotation angle from tangent vector (in degrees)
     // For right inner side corners, rotate 180 degrees to face the correct direction
     let rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
-    if (corner.innerSide === 'right') {
+    if (corner.innerSide === "right") {
       rotation += 180;
     }
 
@@ -454,7 +524,7 @@ const buildStartFinishVisual = (
   segmentArcLength: number,
   startFinishSpaceIndex: number,
   halfTrackWidth: number,
-  flagOffset: number
+  flagOffset: number,
 ): StartFinishVisual | null => {
   if (bezierSegments.length === 0 || segmentArcLength === 0) {
     return null;
@@ -493,7 +563,7 @@ const buildStartFinishVisual = (
     const nextProgress = (i + 1) / numCheckers;
 
     checkers.push({
-      color: i % 2 === 0 ? 'white' : 'black',
+      color: i % 2 === 0 ? "white" : "black",
       x1: startPoint.x + lineVector.x * progress,
       y1: startPoint.y + lineVector.y * progress,
       x2: startPoint.x + lineVector.x * nextProgress,
@@ -527,76 +597,144 @@ export function RaceTrack({
   trackWidth = DEFAULT_TRACK_WIDTH,
   trackColor,
   baseStrokeWidth = 3,
-  editingMode = 'spline',
+  editingMode = "spline",
   onSpaceClick,
   selectedCorner,
   onStartFinishClick,
 }: RaceTrackProps) {
   const halfTrackWidth = trackWidth / 2;
   const flagOffset = halfTrackWidth + 30;
-  
-  const bezierSegments = useMemo(() => pointsToBezierSegments(points, 'C1'), [points]);
 
-  const centerPath = useMemo(() => bezierToSvgPath(points, closed), [points, closed]);
-  const outerLeftPath = useMemo(() => buildOffsetPath(points, closed, halfTrackWidth), [points, closed, halfTrackWidth]);
-  const outerRightPath = useMemo(() => buildOffsetPath(points, closed, -halfTrackWidth), [points, closed, halfTrackWidth]);
-  const trackFillPath = useMemo(() => buildTrackFillPath(points, closed, halfTrackWidth), [points, closed, halfTrackWidth]);
+  const bezierSegments = useMemo(
+    () => pointsToBezierSegments(points, "C1"),
+    [points],
+  );
+
+  const centerPath = useMemo(
+    () => bezierToSvgPath(points, closed),
+    [points, closed],
+  );
+  const outerLeftPath = useMemo(
+    () => buildOffsetPath(points, closed, halfTrackWidth),
+    [points, closed, halfTrackWidth],
+  );
+  const outerRightPath = useMemo(
+    () => buildOffsetPath(points, closed, -halfTrackWidth),
+    [points, closed, halfTrackWidth],
+  );
+  const trackFillPath = useMemo(
+    () => buildTrackFillPath(points, closed, halfTrackWidth),
+    [points, closed, halfTrackWidth],
+  );
 
   const totalArcLength = useMemo(
-    () => (bezierSegments.length > 0 ? calculateChainArcLength(bezierSegments) : 0),
-    [bezierSegments]
+    () =>
+      bezierSegments.length > 0 ? calculateChainArcLength(bezierSegments) : 0,
+    [bezierSegments],
   );
 
   const segmentArcLength = useMemo(
     () => (segments > 0 && totalArcLength > 0 ? totalArcLength / segments : 0),
-    [segments, totalArcLength]
+    [segments, totalArcLength],
   );
 
   const innerSideSegments = useMemo(
     () => buildInnerSideSegments(closed, corners),
-    [closed, corners]
+    [closed, corners],
   );
 
   const innerSidePaths = useMemo(
-    () => buildInnerSidePaths(innerSideSegments, bezierSegments, segmentArcLength, totalArcLength, spaces.length, halfTrackWidth),
-    [innerSideSegments, bezierSegments, segmentArcLength, totalArcLength, spaces.length, halfTrackWidth]
+    () =>
+      buildInnerSidePaths(
+        innerSideSegments,
+        bezierSegments,
+        segmentArcLength,
+        totalArcLength,
+        spaces.length,
+        halfTrackWidth,
+      ),
+    [
+      innerSideSegments,
+      bezierSegments,
+      segmentArcLength,
+      totalArcLength,
+      spaces.length,
+      halfTrackWidth,
+    ],
   );
 
   const spaceCountdowns = useMemo(
     () => computeSpaceCountdowns(corners, spaces),
-    [corners, spaces]
+    [corners, spaces],
   );
 
   const spacePositions = useMemo(
     () => buildSpacePositions(spaces, bezierSegments, segmentArcLength),
-    [spaces, bezierSegments, segmentArcLength]
+    [spaces, bezierSegments, segmentArcLength],
   );
 
   const spaceCornerMap = useMemo(() => {
     const map = new Map<number, Corner>();
-    corners.forEach(corner => {
+    corners.forEach((corner) => {
       map.set(corner.spaceIndex, corner);
     });
     return map;
   }, [corners]);
 
   const segmentLines = useMemo(
-    () => computeSegmentLines(closed, segments, bezierSegments, segmentArcLength, halfTrackWidth),
-    [closed, segments, bezierSegments, segmentArcLength, halfTrackWidth]
+    () =>
+      computeSegmentLines(
+        closed,
+        segments,
+        bezierSegments,
+        segmentArcLength,
+        halfTrackWidth,
+      ),
+    [closed, segments, bezierSegments, segmentArcLength, halfTrackWidth],
   );
 
   const cornerVisuals = useMemo(
-    () => computeCornerVisuals(closed, corners, spaces, bezierSegments, segmentArcLength, halfTrackWidth, flagOffset),
-    [closed, corners, spaces, bezierSegments, segmentArcLength, halfTrackWidth, flagOffset]
+    () =>
+      computeCornerVisuals(
+        closed,
+        corners,
+        spaces,
+        bezierSegments,
+        segmentArcLength,
+        halfTrackWidth,
+        flagOffset,
+      ),
+    [
+      closed,
+      corners,
+      spaces,
+      bezierSegments,
+      segmentArcLength,
+      halfTrackWidth,
+      flagOffset,
+    ],
   );
 
   const startFinishVisual = useMemo(
-    () => buildStartFinishVisual(bezierSegments, segmentArcLength, startFinishSpaceIndex, halfTrackWidth, flagOffset),
-    [bezierSegments, segmentArcLength, startFinishSpaceIndex, halfTrackWidth, flagOffset]
+    () =>
+      buildStartFinishVisual(
+        bezierSegments,
+        segmentArcLength,
+        startFinishSpaceIndex,
+        halfTrackWidth,
+        flagOffset,
+      ),
+    [
+      bezierSegments,
+      segmentArcLength,
+      startFinishSpaceIndex,
+      halfTrackWidth,
+      flagOffset,
+    ],
   );
 
-  const isCornersMode = editingMode === 'corners';
-  const isMetadataMode = editingMode === 'metadata';
+  const isCornersMode = editingMode === "corners";
+  const isMetadataMode = editingMode === "metadata";
 
   if (points.length < 2) {
     return null;
@@ -624,8 +762,8 @@ export function RaceTrack({
         strokeWidth={baseStrokeWidth}
       />
 
-  {/* Inner side highlight paths for corners */}
-  {innerSidePaths.map(path => (
+      {/* Inner side highlight paths for corners */}
+      {innerSidePaths.map((path) => (
         <path
           key={path.key}
           d={path.d}
@@ -638,19 +776,19 @@ export function RaceTrack({
       ))}
 
       {/* Track fill (main track area) */}
-      <path d={trackFillPath} fill={trackColor ?? '#3a3a3a'} stroke="none" />
+      <path d={trackFillPath} fill={trackColor ?? "#3a3a3a"} stroke="none" />
 
       {/* Center dashed path */}
       <path
         d={centerPath}
         fill="none"
         stroke="white"
-        strokeDasharray={`${baseStrokeWidth*3} ${baseStrokeWidth*2}`}
+        strokeDasharray={`${baseStrokeWidth * 3} ${baseStrokeWidth * 2}`}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={baseStrokeWidth / 2}
       />
-      
+
       {/* Segment lines across the track */}
       {segmentLines.map((line, index) => (
         <line
@@ -665,150 +803,180 @@ export function RaceTrack({
         />
       ))}
 
-  {/* Space markers, selection circles */}
-  {debugMode && spaces.map(space => {
-    const position = spacePositions.get(space.index);
-    if (!position) {
-      return null;
-    }
+      {/* Space markers, selection circles */}
+      {debugMode &&
+        spaces.map((space) => {
+          const position = spacePositions.get(space.index);
+          if (!position) {
+            return null;
+          }
 
-    const corner = spaceCornerMap.get(space.index);
-    const hasCorner = Boolean(corner);
-    const isSelectedCorner = corner ? selectedCorner === corner.id : false;
-    const isStartFinish = space.index === startFinishSpaceIndex;
+          const corner = spaceCornerMap.get(space.index);
+          const hasCorner = Boolean(corner);
+          const isSelectedCorner = corner
+            ? selectedCorner === corner.id
+            : false;
+          const isStartFinish = space.index === startFinishSpaceIndex;
 
-    return (
-      <g key={`space-${space.id}`}>
-        {/* Small circle at each space */}
-        <circle cx={position.x} cy={position.y} fill={CORNER_COLOR} opacity={0.7} r={3} />
+          return (
+            <g key={`space-${space.id}`}>
+              {/* Small circle at each space */}
+              <circle
+                cx={position.x}
+                cy={position.y}
+                fill={CORNER_COLOR}
+                opacity={0.7}
+                r={3}
+              />
 
-        {/* Corner/metadata selection circles (interactive) */}
-        {isCornersMode && (
-          <circle
-            cx={position.x}
-            cy={position.y}
-            fill={hasCorner ? CORNER_COLOR : 'transparent'}
-            opacity={CORNER_OPACITY}
-            r={CIRCLE_RADIUS}
-            stroke={isSelectedCorner ? CORNER_SELECTED_COLOR : hasCorner ? CORNER_COLOR : CORNER_DEFAULT_STROKE}
-            strokeWidth={isSelectedCorner ? CORNER_SELECTED_STROKE_WIDTH : CORNER_DEFAULT_STROKE_WIDTH}
-            style={{ cursor: 'pointer' }}
-            onClick={() => onSpaceClick?.(space.index)}
-          />
-        )}
+              {/* Corner/metadata selection circles (interactive) */}
+              {isCornersMode && (
+                <circle
+                  cx={position.x}
+                  cy={position.y}
+                  fill={hasCorner ? CORNER_COLOR : "transparent"}
+                  opacity={CORNER_OPACITY}
+                  r={CIRCLE_RADIUS}
+                  stroke={
+                    isSelectedCorner
+                      ? CORNER_SELECTED_COLOR
+                      : hasCorner
+                        ? CORNER_COLOR
+                        : CORNER_DEFAULT_STROKE
+                  }
+                  strokeWidth={
+                    isSelectedCorner
+                      ? CORNER_SELECTED_STROKE_WIDTH
+                      : CORNER_DEFAULT_STROKE_WIDTH
+                  }
+                  style={{ cursor: "pointer" }}
+                  onClick={() => onSpaceClick?.(space.index)}
+                />
+              )}
 
-        {/* Metadata selection circle for start/finish (interactive) */}
-        {isMetadataMode && (
-          <circle
-            cx={position.x}
-            cy={position.y}
-            fill={isStartFinish ? METADATA_SELECTED_COLOR : 'transparent'}
-            opacity={CORNER_OPACITY}
-            r={CIRCLE_RADIUS}
-            stroke={isStartFinish ? METADATA_SELECTED_COLOR : CORNER_DEFAULT_STROKE}
-            strokeWidth={isStartFinish ? CORNER_SELECTED_STROKE_WIDTH : CORNER_DEFAULT_STROKE_WIDTH}
-            style={{ cursor: 'pointer' }}
-            onClick={() => onStartFinishClick?.(space.index)}
-          />
-        )}
+              {/* Metadata selection circle for start/finish (interactive) */}
+              {isMetadataMode && (
+                <circle
+                  cx={position.x}
+                  cy={position.y}
+                  fill={isStartFinish ? METADATA_SELECTED_COLOR : "transparent"}
+                  opacity={CORNER_OPACITY}
+                  r={CIRCLE_RADIUS}
+                  stroke={
+                    isStartFinish
+                      ? METADATA_SELECTED_COLOR
+                      : CORNER_DEFAULT_STROKE
+                  }
+                  strokeWidth={
+                    isStartFinish
+                      ? CORNER_SELECTED_STROKE_WIDTH
+                      : CORNER_DEFAULT_STROKE_WIDTH
+                  }
+                  style={{ cursor: "pointer" }}
+                  onClick={() => onStartFinishClick?.(space.index)}
+                />
+              )}
 
-        {/* Space index label */}
-        <text
-          fill="#4a9eff"
-          fontSize="10"
-          fontWeight="bold"
-          x={position.x + 8}
-          y={position.y - 8}
-        >
-          {space.index}
-        </text>
-      </g>
-    );
-  })}
+              {/* Space index label */}
+              <text
+                fill="#4a9eff"
+                fontSize="10"
+                fontWeight="bold"
+                x={position.x + 8}
+                y={position.y - 8}
+              >
+                {space.index}
+              </text>
+            </g>
+          );
+        })}
 
-  {/* Countdown badges or numbers (for spaces near corners) - always visible */}
-  {spaces.map(space => {
-    const position = spacePositions.get(space.index);
-    if (!position) {
-      return null;
-    }
-    const countdown = spaceCountdowns.get(space.index);
-    if (countdown === undefined || countdown < 0) {
-      return null;
-    }
-    // Calculate perpendicular direction for inside positioning
-    const targetDistance = space.index * segmentArcLength;
-    const { segmentIndex, t } = findTForDistance(bezierSegments, targetDistance);
-    const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
-    const normal = normalizeVector(tangent);
-    if (!normal) {
-      // Fallback to text if normal calculation fails
-      return countdown <= 3 ? (
-        <CountdownBadge
-          key={`countdown-badge-fallback-${space.id}`}
-          number={countdown}
-          x={position.x}
-          y={position.y + 100}
-        />
-      ) : (
-        <text
-          key={`countdown-text-fallback-${space.id}`}
-          fill="#ffd700"
-          fontSize="12"
-          fontWeight="bold"
-          textAnchor="middle"
-          x={position.x}
-          y={position.y + 100}
-        >
-          {countdown}
-        </text>
-      );
-    }
-    const perp = perpendicular(normal);
-    // Position on the inside of the track (opposite direction from outer edge)
-    const insideOffset = -60; // Distance from center line to inside
-    const insideX = position.x - perp.x * insideOffset;
-    const insideY = position.y - perp.y * insideOffset;
-    // Calculate rotation angle from tangent vector (in degrees)
-    const rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
-    // Use CountdownBadge for numbers 0-3, fallback to text for higher numbers
-    if (countdown <= 3) {
-      // Additional offset for CountdownBadge to move it further inside
-      const badgeOffset = -5;
-      const badgeX = insideX - perp.x * badgeOffset;
-      const badgeY = insideY - perp.y * badgeOffset;
-      return (
-        <CountdownBadge
-          key={`countdown-badge-${space.id}`}
-          number={countdown}
-          rotation={rotation}
-          x={badgeX}
-          y={badgeY}
-        />
-      );
-    } else {
-      return (
-        <text
-          key={`countdown-text-${space.id}`}
-          fill="#ffd700"
-          fontSize="12"
-          fontWeight="bold"
-          textAnchor="middle"
-          x={insideX}
-          y={insideY}
-        >
-          {countdown}
-        </text>
-      );
-    }
-  })}
+      {/* Countdown badges or numbers (for spaces near corners) - always visible */}
+      {spaces.map((space) => {
+        const position = spacePositions.get(space.index);
+        if (!position) {
+          return null;
+        }
+        const countdown = spaceCountdowns.get(space.index);
+        if (countdown === undefined || countdown < 0) {
+          return null;
+        }
+        // Calculate perpendicular direction for inside positioning
+        const targetDistance = space.index * segmentArcLength;
+        const { segmentIndex, t } = findTForDistance(
+          bezierSegments,
+          targetDistance,
+        );
+        const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
+        const normal = normalizeVector(tangent);
+        if (!normal) {
+          // Fallback to text if normal calculation fails
+          return countdown <= 3 ? (
+            <CountdownBadge
+              key={`countdown-badge-fallback-${space.id}`}
+              number={countdown}
+              x={position.x}
+              y={position.y + 100}
+            />
+          ) : (
+            <text
+              key={`countdown-text-fallback-${space.id}`}
+              fill="#ffd700"
+              fontSize="12"
+              fontWeight="bold"
+              textAnchor="middle"
+              x={position.x}
+              y={position.y + 100}
+            >
+              {countdown}
+            </text>
+          );
+        }
+        const perp = perpendicular(normal);
+        // Position on the inside of the track (opposite direction from outer edge)
+        const insideOffset = -60; // Distance from center line to inside
+        const insideX = position.x - perp.x * insideOffset;
+        const insideY = position.y - perp.y * insideOffset;
+        // Calculate rotation angle from tangent vector (in degrees)
+        const rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
+        // Use CountdownBadge for numbers 0-3, fallback to text for higher numbers
+        if (countdown <= 3) {
+          // Additional offset for CountdownBadge to move it further inside
+          const badgeOffset = -5;
+          const badgeX = insideX - perp.x * badgeOffset;
+          const badgeY = insideY - perp.y * badgeOffset;
+          return (
+            <CountdownBadge
+              key={`countdown-badge-${space.id}`}
+              number={countdown}
+              rotation={rotation}
+              x={badgeX}
+              y={badgeY}
+            />
+          );
+        } else {
+          return (
+            <text
+              key={`countdown-text-${space.id}`}
+              fill="#ffd700"
+              fontSize="12"
+              fontWeight="bold"
+              textAnchor="middle"
+              x={insideX}
+              y={insideY}
+            >
+              {countdown}
+            </text>
+          );
+        }
+      })}
 
-  {/* Corner lines */}
-  {cornerVisuals.map(({ line }, index) => (
+      {/* Corner lines */}
+      {cornerVisuals.map(({ line }, index) => (
         <line
           key={`corner-line-${index}`}
           stroke="white"
-          strokeWidth={baseStrokeWidth*2}
+          strokeWidth={baseStrokeWidth * 2}
           x1={line.x1}
           x2={line.x2}
           y1={line.y1}
@@ -816,8 +984,8 @@ export function RaceTrack({
         />
       ))}
 
-  {/* Corner badges */}
-  {cornerVisuals.map(({ corner, badge, rotation }) => (
+      {/* Corner badges */}
+      {cornerVisuals.map(({ corner, badge, rotation }) => (
         <CornerBadge
           key={`corner-${corner.id}`}
           rotation={rotation}
@@ -835,7 +1003,7 @@ export function RaceTrack({
               key={`checker-${index}`}
               stroke={checker.color}
               strokeLinecap="butt"
-              strokeWidth={baseStrokeWidth*2}
+              strokeWidth={baseStrokeWidth * 2}
               x1={checker.x1}
               x2={checker.x2}
               y1={checker.y1}
@@ -843,7 +1011,9 @@ export function RaceTrack({
             />
           ))}
 
-          <g transform={`rotate(${startFinishVisual.flag.angle} ${startFinishVisual.flag.x} ${startFinishVisual.flag.y})`}>
+          <g
+            transform={`rotate(${startFinishVisual.flag.angle} ${startFinishVisual.flag.x} ${startFinishVisual.flag.y})`}
+          >
             <line
               stroke="#333"
               strokeWidth={2}
@@ -861,8 +1031,8 @@ export function RaceTrack({
               x={startFinishVisual.flag.x - FLAG_SIZE * 0.3}
               y={startFinishVisual.flag.y - FLAG_SIZE * 0.3}
             />
-            {[0, 1, 2, 3, 4].map(row =>
-              [0, 1, 2, 3, 4].map(col => {
+            {[0, 1, 2, 3, 4].map((row) =>
+              [0, 1, 2, 3, 4].map((col) => {
                 const isBlack = (row + col) % 2 === 0;
                 return isBlack ? (
                   <rect
@@ -870,16 +1040,23 @@ export function RaceTrack({
                     fill="black"
                     height={FLAG_SIZE / 5}
                     width={FLAG_SIZE / 5}
-                    x={startFinishVisual.flag.x - FLAG_SIZE * 0.3 + col * (FLAG_SIZE / 5)}
-                    y={startFinishVisual.flag.y - FLAG_SIZE * 0.3 + row * (FLAG_SIZE / 5)}
+                    x={
+                      startFinishVisual.flag.x -
+                      FLAG_SIZE * 0.3 +
+                      col * (FLAG_SIZE / 5)
+                    }
+                    y={
+                      startFinishVisual.flag.y -
+                      FLAG_SIZE * 0.3 +
+                      row * (FLAG_SIZE / 5)
+                    }
                   />
                 ) : null;
-              })
+              }),
             )}
           </g>
         </g>
       )}
-
     </g>
   );
 }

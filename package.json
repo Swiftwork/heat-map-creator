@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "next lint --fix && prettier --write .",
     "gen": "npx @chakra-ui/cli typegen ./theme/system.ts"
   },
   "dependencies": {
