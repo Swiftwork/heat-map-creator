@@ -20,6 +20,7 @@ interface PathEditorProps {
   onPathClick: () => void;
   onPointClick: (index: number) => void;
   onPathClickWithCoords?: (x: number, y: number) => void;
+  toolMode?: "select" | "add" | "remove";
 }
 
 export function PathEditor({
@@ -34,6 +35,7 @@ export function PathEditor({
   onPathClick,
   onPointClick,
   onPathClickWithCoords,
+  toolMode = "select",
 }: PathEditorProps) {
   const pathData = bezierToSvgPath(points, closed);
 
@@ -47,9 +49,10 @@ export function PathEditor({
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={30}
-        style={{ cursor: "pointer" }}
+        style={{ cursor: toolMode === "add" ? "crosshair" : "pointer" }}
         onClick={(e) => {
-          if (onPathClickWithCoords) {
+          // Only allow adding points in add mode
+          if (toolMode === "add" && onPathClickWithCoords) {
             const svg = (e.target as SVGElement).ownerSVGElement;
             if (svg) {
               const pt = svg.createSVGPoint();
@@ -177,17 +180,27 @@ export function PathEditor({
               <circle
                 cx={point.x}
                 cy={point.y}
-                fill="white"
+                fill={toolMode === "remove" ? "#ff4444" : "white"}
                 r={6}
-                stroke={color}
+                stroke={toolMode === "remove" ? "#cc0000" : color}
                 strokeWidth={2}
-                style={{ cursor: "move" }}
+                style={{
+                  cursor:
+                    toolMode === "select"
+                      ? "move"
+                      : toolMode === "remove"
+                        ? "pointer"
+                        : "default",
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onPointClick(index);
                 }}
                 onMouseDown={(e) => {
                   e.stopPropagation();
+                  // Only allow dragging in select mode
+                  if (toolMode !== "select") return;
+
                   const handleMouseMove = (moveEvent: MouseEvent) => {
                     const svg = (e.target as SVGElement).ownerSVGElement;
                     if (!svg) return;

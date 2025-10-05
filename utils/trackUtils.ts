@@ -337,7 +337,7 @@ export function autoSuggestCorners(
         speedLimit,
         position: space.position,
         isAutoSuggested: true,
-        innerSide: "left", // Default to left, can be adjusted manually
+        innerSide: "left", // Default to left, can be adjusted manually based on race direction
         cornerType,
         difficulty,
         suggestedGear: calculateSuggestedGear(speedLimit),
@@ -431,6 +431,7 @@ export function createDefaultTrackMetadata(): TrackMetadata {
     name: "Untitled Track",
     laps: 3,
     startFinishSpaceIndex: 0,
+    raceDirection: "clockwise",
     boardMetadata: {
       cornersPerLap: 0,
       spacesPerLap: 0,

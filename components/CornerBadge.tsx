@@ -5,6 +5,9 @@ interface CornerBadgeProps {
   x: number;
   y: number;
   rotation?: number;
+  isSelected?: boolean;
+  isRemoveMode?: boolean;
+  onClick?: () => void;
 }
 
 export function CornerBadge({
@@ -12,6 +15,9 @@ export function CornerBadge({
   x,
   y,
   rotation = 0,
+  isSelected = false,
+  isRemoveMode = false,
+  onClick,
 }: CornerBadgeProps) {
   const size = 45;
   const radius = size / 2;
@@ -24,7 +30,14 @@ export function CornerBadge({
     <>
       {/* Badge background, clock marks, and text - all scaled and rotated together */}
       <g
+        style={{ cursor: onClick ? "pointer" : "default" }}
         transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}
+        onClick={(e) => {
+          if (onClick) {
+            e.stopPropagation();
+            onClick();
+          }
+        }}
       >
         <defs>
           <clipPath id={`clip-badge-${speedLimit}`}>
@@ -32,8 +45,13 @@ export function CornerBadge({
           </clipPath>
         </defs>
 
-        {/* Background circle with white fill */}
-        <rect fill="white" height="100" rx="50" width="100" />
+        {/* Background circle with white fill (red in remove mode, yellow when selected) */}
+        <rect
+          fill={isRemoveMode ? "#ff4444" : isSelected ? "#ffe600" : "white"}
+          height="100"
+          rx="50"
+          width="100"
+        />
 
         <g clipPath={`url(#clip-badge-${speedLimit})`}>
           {/* Clock/game board marks */}

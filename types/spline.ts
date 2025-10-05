@@ -84,6 +84,7 @@ export interface TrackMetadata {
   name: string;
   laps: number;
   startFinishSpaceIndex: number;
+  raceDirection: "clockwise" | "counter-clockwise";
   // Enhanced board metadata
   boardMetadata: {
     cornersPerLap: number;
@@ -153,6 +154,8 @@ export interface EditorState {
   selectedSpace: string | null;
   debugMode: boolean;
   editingMode: "spline" | "corners" | "metadata" | "appearance";
+  splineToolMode: "select" | "add" | "remove";
+  cornerToolMode: "select" | "add" | "remove";
 }
 
 // Serialization and validation types

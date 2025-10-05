@@ -7,7 +7,10 @@ import {
   FaEye,
   FaEyeSlash,
   FaFlagCheckered,
+  FaHandPointer,
   FaImage,
+  FaMinus,
+  FaPlus,
   FaTrash,
   FaX,
 } from "react-icons/fa6";
@@ -41,6 +44,7 @@ interface ToolbarProps {
     name: string;
     laps: number;
     startFinishSpaceIndex: number;
+    raceDirection: "clockwise" | "counter-clockwise";
     boardMetadata: {
       cornersPerLap: number;
       spacesPerLap: number;
@@ -52,6 +56,12 @@ interface ToolbarProps {
   // Manual point editing props
   selectedPointIndex?: number | null;
   onRemoveSelectedPoint?: () => void;
+  // Spline tool mode props
+  splineToolMode?: "select" | "add" | "remove";
+  onSplineToolModeChange?: (mode: "select" | "add" | "remove") => void;
+  // Corner tool mode props
+  cornerToolMode?: "select" | "add" | "remove";
+  onCornerToolModeChange?: (mode: "select" | "add" | "remove") => void;
   // Corner editing props
   selectedCorner?: Corner | undefined;
   onCornerUpdate?: (updates: Partial<Corner>) => void;
@@ -77,6 +87,10 @@ export function Toolbar({
   onMetadataChange,
   selectedPointIndex,
   onRemoveSelectedPoint,
+  splineToolMode = "select",
+  onSplineToolModeChange,
+  cornerToolMode = "select",
+  onCornerToolModeChange,
   selectedCorner,
   onCornerUpdate,
   onCornerRemove,
@@ -347,31 +361,69 @@ export function Toolbar({
 
           {/* Editing Controls Row (Manual Point, Corner/metadata hints, Corner Editing, Track Metadata) */}
           <>
-            {/* Manual Point Controls */}
+            {/* Spline Tool Mode Controls */}
             {editingMode === "spline" && (
               <HStack gap={2} justify="center" wrap="wrap">
                 <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                  Click on spline to add points or selected point to edit
+                  Tool:
                 </Text>
-                {selectedPointIndex !== null && (
-                  <RetroButton
-                    colorScheme="red"
-                    size="sm"
-                    title="Remove selected point"
-                    onClick={onRemoveSelectedPoint}
-                  >
-                    <FaX /> Remove Selected Point
-                  </RetroButton>
-                )}
+                <RetroButton
+                  colorScheme={splineToolMode === "select" ? "blue" : undefined}
+                  isToggled={splineToolMode === "select"}
+                  size="sm"
+                  onClick={() => onSplineToolModeChange?.("select")}
+                >
+                  <FaHandPointer /> Select Point
+                </RetroButton>
+                <RetroButton
+                  colorScheme={splineToolMode === "add" ? "green" : undefined}
+                  isToggled={splineToolMode === "add"}
+                  size="sm"
+                  onClick={() => onSplineToolModeChange?.("add")}
+                >
+                  <FaPlus /> Add Point
+                </RetroButton>
+                <RetroButton
+                  colorScheme={splineToolMode === "remove" ? "red" : undefined}
+                  isToggled={splineToolMode === "remove"}
+                  size="sm"
+                  onClick={() => onSplineToolModeChange?.("remove")}
+                >
+                  <FaMinus /> Remove Point
+                </RetroButton>
               </HStack>
             )}
 
-            {/* Corner/metadata hints */}
+            {/* Corner Tool Mode Controls */}
             {editingMode === "corners" && (
               <HStack gap={2} justify="center" wrap="wrap">
                 <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                  Click on space to add corner or select corner to edit
+                  Tool:
                 </Text>
+                <RetroButton
+                  colorScheme={cornerToolMode === "select" ? "blue" : undefined}
+                  isToggled={cornerToolMode === "select"}
+                  size="sm"
+                  onClick={() => onCornerToolModeChange?.("select")}
+                >
+                  <FaHandPointer /> Select Corner
+                </RetroButton>
+                <RetroButton
+                  colorScheme={cornerToolMode === "add" ? "green" : undefined}
+                  isToggled={cornerToolMode === "add"}
+                  size="sm"
+                  onClick={() => onCornerToolModeChange?.("add")}
+                >
+                  <FaPlus /> Add Corner
+                </RetroButton>
+                <RetroButton
+                  colorScheme={cornerToolMode === "remove" ? "red" : undefined}
+                  isToggled={cornerToolMode === "remove"}
+                  size="sm"
+                  onClick={() => onCornerToolModeChange?.("remove")}
+                >
+                  <FaMinus /> Remove Corner
+                </RetroButton>
               </HStack>
             )}
 
@@ -584,6 +636,34 @@ export function Toolbar({
                         )
                       }
                     />
+                  </HStack>
+                </HStack>
+
+                <HStack gap={4} justify="center" wrap="wrap">
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Race Direction:
+                    </Text>
+                    <RetroButton
+                      isActive={trackMetadata.raceDirection === "clockwise"}
+                      size="sm"
+                      onClick={() =>
+                        handleMetadataChange("raceDirection", "clockwise")
+                      }
+                    >
+                      Clockwise
+                    </RetroButton>
+                    <RetroButton
+                      isActive={
+                        trackMetadata.raceDirection === "counter-clockwise"
+                      }
+                      size="sm"
+                      onClick={() =>
+                        handleMetadataChange("raceDirection", "counter-clockwise")
+                      }
+                    >
+                      Counter-Clockwise
+                    </RetroButton>
                   </HStack>
                 </HStack>
               </VStack>
