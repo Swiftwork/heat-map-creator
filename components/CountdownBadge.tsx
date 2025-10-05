@@ -9,9 +9,7 @@ interface CountdownBadgeProps {
 }
 
 // Constants for badge sizing and styling
-const BADGE_SIZE = 25;
-const BADGE_RADIUS = BADGE_SIZE / 2;
-const SCALE_FACTOR = BADGE_SIZE / 100;
+const BADGE_SIZE = 30;
 const FONT_SIZE_RATIO = 0.65;
 const TEXT_Y_OFFSET_RATIO = 0.6;
 const TEXT_ROTATION_OFFSET_RATIO = 0.2;

@@ -54,9 +54,9 @@ export function SplineEditor() {
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [raceSegments, setRaceSegments] = useState(100);
   const [scale, setScale] = useState(100);
-  const [trackColor, setTrackColor] = useState("#3a3a3a");
-  const [countdownTextColor, setCountdownTextColor] = useState("#ffd700");
-  const [showTrack, setShowTrack] = useState(true);
+  const [trackColor, setTrackColor, _isTrackColorLoaded] = useLocalStorage("track-appearance-color", "#3a3a3a");
+  const [countdownTextColor, setCountdownTextColor, _isCountdownColorLoaded] = useLocalStorage("track-appearance-countdown-text-color", "#ffd700");
+  const [showTrack, setShowTrack, _isShowTrackLoaded] = useLocalStorage("track-display-show-track", true);
 
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
@@ -470,7 +470,7 @@ export function SplineEditor() {
 
   const handleToggleTrack = useCallback(() => {
     setShowTrack((prev) => !prev);
-  }, []);
+  }, [setShowTrack]);
 
   // Editing mode handler
   const handleEditingModeChange = useCallback(

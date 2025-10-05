@@ -12,9 +12,7 @@ interface CornerBadgeProps {
 }
 
 // Constants for badge sizing and styling
-const BADGE_SIZE = 45;
-const BADGE_RADIUS = BADGE_SIZE / 2;
-const SCALE_FACTOR = BADGE_SIZE / 100;
+const BADGE_SIZE = 75;
 const FONT_SIZE_RATIO = 0.45;
 const TEXT_Y_OFFSET_RATIO = 0.22;
 

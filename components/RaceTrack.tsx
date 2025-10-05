@@ -19,6 +19,7 @@ const BASE_TRACK_WIDTH = 100;
 const BASE_STROKE_WIDTH = 3;
 const SAMPLES_PER_CURVE = 100;
 const BASE_FLAG_SIZE = 30;
+const BASE_COUNTDOWN_TEXT_FONT_SIZE = 20;
 
 // Corner and metadata graphics configuration
 const BASE_CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
@@ -1183,8 +1184,9 @@ export function RaceTrack({
             <text
               key={`countdown-text-${space.id}`}
               fill={countdownTextColor || "#ffd700"}
-              fontSize={12 * (scale / 100)}
-              fontWeight="bold"
+              style={{
+                fontSize: `${BASE_COUNTDOWN_TEXT_FONT_SIZE * (scale / 100)}px`,
+              }}
               textAnchor="middle"
               transform={`rotate(${rotation + 180} ${insideX} ${insideY})`}
               x={insideX}
