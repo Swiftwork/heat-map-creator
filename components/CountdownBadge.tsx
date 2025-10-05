@@ -21,8 +21,16 @@ export function CountdownBadge({ number, x, y, rotation = 0 }: CountdownBadgePro
     <>
       {/* Badge with exact SVG structure */}
       <g transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}>
-        <rect fill="none" height="96" stroke="black" strokeWidth="5" width="96" x="2" y="2"/>
-        
+  <rect fill="#B27E00" height="88" rx="8" stroke="black" strokeWidth="5" width="88" x="6" y="6"/>
+  {/* Inner inset stroke to match the sample */}
+  <rect fill="none" height="76" rx="6" stroke="black" strokeWidth="3" width="76" x="12" y="12"/>
+
+        {/* Decorative small circles */}
+        {/* top-left */}
+        <circle cx="22" cy="22" fill="black" r="5" />
+        {/* bottom-right */}
+        <circle cx="78" cy="78" fill="black" r="5" />
+
         {/* Countdown number text */}
         <text
           fill="black"
