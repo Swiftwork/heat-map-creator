@@ -25,10 +25,30 @@ export function CountdownBadge({
   return (
     <>
       {/* Badge with exact SVG structure */}
-      <g transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}>
-  <rect fill="#B27E00" height="88" rx="8" stroke="black" strokeWidth="5" width="88" x="6" y="6"/>
-  {/* Inner inset stroke to match the sample */}
-  <rect fill="none" height="76" rx="6" stroke="black" strokeWidth="3" width="76" x="12" y="12"/>
+      <g
+        transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}
+      >
+        <rect
+          fill="#B27E00"
+          height="88"
+          rx="8"
+          stroke="black"
+          strokeWidth="5"
+          width="88"
+          x="6"
+          y="6"
+        />
+        {/* Inner inset stroke to match the sample */}
+        <rect
+          fill="none"
+          height="76"
+          rx="6"
+          stroke="black"
+          strokeWidth="3"
+          width="76"
+          x="12"
+          y="12"
+        />
 
         {/* Decorative small circles */}
         {/* top-left */}

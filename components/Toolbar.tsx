@@ -34,17 +34,21 @@ interface ToolbarProps {
   // New props for Section B features
   debugMode: boolean;
   onToggleDebug: () => void;
+  showTrack: boolean;
+  onToggleTrack: () => void;
   editingMode: "spline" | "corners" | "metadata" | "appearance";
   onEditingModeChange: (
-    mode: "spline" | "corners" | "metadata" | "appearance",
+    mode: "spline" | "corners" | "metadata" | "appearance"
   ) => void;
   trackColor?: string;
   onTrackColorChange?: (color: string) => void;
+  countdownTextColor?: string;
+  onCountdownTextColorChange?: (color: string) => void;
   trackMetadata?: {
     name: string;
     laps: number;
     startFinishSpaceIndex: number;
-    raceDirection: "clockwise" | "counter-clockwise";
+    raceDirection: boolean; // true = clockwise, false = counter-clockwise
     boardMetadata: {
       cornersPerLap: number;
       spacesPerLap: number;
@@ -81,6 +85,8 @@ export function Toolbar({
   hasImage,
   debugMode,
   onToggleDebug,
+  showTrack,
+  onToggleTrack,
   editingMode,
   onEditingModeChange,
   trackMetadata,
@@ -96,6 +102,8 @@ export function Toolbar({
   onCornerRemove,
   trackColor,
   onTrackColorChange,
+  countdownTextColor,
+  onCountdownTextColorChange,
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -186,7 +194,7 @@ export function Toolbar({
 
   // small SVG tile (8x8) for a crisp repeating checkered pattern
   const checkeredSvg = encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><rect width='8' height='8' fill='white'/><rect x='0' y='0' width='4' height='4' fill='black'/><rect x='4' y='4' width='4' height='4' fill='black'/></svg>",
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><rect width='8' height='8' fill='white'/><rect x='0' y='0' width='4' height='4' fill='black'/><rect x='4' y='4' width='4' height='4' fill='black'/></svg>"
   );
 
   return (
@@ -324,7 +332,13 @@ export function Toolbar({
                 >
                   {debugMode ? <FaEye /> : <FaEyeSlash />} Debug
                 </RetroButton>
-                {/* Corners toggle removed */}
+                <RetroButton
+                  colorScheme={showTrack ? "blue" : "gray"}
+                  size="sm"
+                  onClick={onToggleTrack}
+                >
+                  {showTrack ? <FaEye /> : <FaEyeSlash />} Track
+                </RetroButton>
               </HStack>
             </HStack>
 
@@ -526,6 +540,19 @@ export function Toolbar({
                       }
                     />
                   </HStack>
+                  <HStack gap={2}>
+                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
+                      Countdown Text (4+):
+                    </Text>
+                    <RetroColorInput
+                      size="sm"
+                      value={countdownTextColor ?? "#ffd700"}
+                      width="80px"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        onCountdownTextColorChange?.(e.target.value)
+                      }
+                    />
+                  </HStack>
                 </HStack>
               </VStack>
             )}
@@ -575,7 +602,7 @@ export function Toolbar({
                       onChange={(e) =>
                         handleMetadataChange(
                           "laps",
-                          parseInt(e.target.value, 10),
+                          parseInt(e.target.value, 10)
                         )
                       }
                     />
@@ -594,7 +621,7 @@ export function Toolbar({
                       onChange={(e) =>
                         handleMetadataChange(
                           "startFinishSpaceIndex",
-                          parseInt(e.target.value, 10),
+                          parseInt(e.target.value, 10)
                         )
                       }
                     />
@@ -613,7 +640,7 @@ export function Toolbar({
                       onChange={(e) =>
                         handleBoardMetadataChange(
                           "heatCardCount",
-                          parseInt(e.target.value, 10),
+                          parseInt(e.target.value, 10)
                         )
                       }
                     />
@@ -632,7 +659,7 @@ export function Toolbar({
                       onChange={(e) =>
                         handleBoardMetadataChange(
                           "stressCardCount",
-                          parseInt(e.target.value, 10),
+                          parseInt(e.target.value, 10)
                         )
                       }
                     />
@@ -645,24 +672,12 @@ export function Toolbar({
                       Race Direction:
                     </Text>
                     <RetroButton
-                      isActive={trackMetadata.raceDirection === "clockwise"}
                       size="sm"
                       onClick={() =>
-                        handleMetadataChange("raceDirection", "clockwise")
+                        handleMetadataChange("raceDirection", !trackMetadata.raceDirection)
                       }
                     >
-                      Clockwise
-                    </RetroButton>
-                    <RetroButton
-                      isActive={
-                        trackMetadata.raceDirection === "counter-clockwise"
-                      }
-                      size="sm"
-                      onClick={() =>
-                        handleMetadataChange("raceDirection", "counter-clockwise")
-                      }
-                    >
-                      Counter-Clockwise
+                      Flip Race Direction
                     </RetroButton>
                   </HStack>
                 </HStack>

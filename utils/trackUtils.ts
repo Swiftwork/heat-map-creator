@@ -431,7 +431,7 @@ export function createDefaultTrackMetadata(): TrackMetadata {
     name: "Untitled Track",
     laps: 3,
     startFinishSpaceIndex: 0,
-    raceDirection: "clockwise",
+    raceDirection: true, // Default to clockwise
     boardMetadata: {
       cornersPerLap: 0,
       spacesPerLap: 0,

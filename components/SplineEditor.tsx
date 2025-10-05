@@ -55,7 +55,9 @@ export function SplineEditor() {
   const [raceSegments, setRaceSegments] = useState(100);
   const [trackWidth, setTrackWidth] = useState(100);
   const [trackColor, setTrackColor] = useState("#3a3a3a");
+  const [countdownTextColor, setCountdownTextColor] = useState("#ffd700");
   const [baseStrokeWidth, setBaseStrokeWidth] = useState(3);
+  const [showTrack, setShowTrack] = useState(true);
 
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
@@ -98,12 +100,12 @@ export function SplineEditor() {
     if (isLoaded && trackData) {
       // Migrate legacy tracks that don't have raceDirection
       let migratedTrackData = trackData;
-      if (!trackData.metadata.raceDirection) {
+      if (trackData.metadata.raceDirection === undefined) {
         migratedTrackData = {
           ...trackData,
           metadata: {
             ...trackData.metadata,
-            raceDirection: "clockwise" as const,
+            raceDirection: true, // Default to clockwise
           },
         };
         setTrackData(migratedTrackData);
@@ -467,6 +469,10 @@ export function SplineEditor() {
     setEditorState((prev) => ({ ...prev, debugMode: !prev.debugMode }));
   }, []);
 
+  const handleToggleTrack = useCallback(() => {
+    setShowTrack((prev) => !prev);
+  }, []);
+
   // Editing mode handler
   const handleEditingModeChange = useCallback(
     (mode: "spline" | "corners" | "metadata" | "appearance") => {
@@ -711,8 +717,7 @@ export function SplineEditor() {
         speedLimit: 5, // Default speed limit
         position: space.position,
         isAutoSuggested: false,
-        innerSide:
-          trackData.metadata.raceDirection === "clockwise" ? "left" : "right", // Set based on race direction
+        innerSide: trackData.metadata.raceDirection ? "left" : "right", // Set based on race direction (true = clockwise = left)
         cornerType: "medium",
         difficulty: 5,
         suggestedGear: 3,
@@ -872,7 +877,6 @@ export function SplineEditor() {
           <image
             height={dimensions.height}
             href={backgroundImage}
-            opacity={0.7}
             preserveAspectRatio="xMidYMid meet"
             style={{ pointerEvents: "none" }}
             width={dimensions.width}
@@ -880,13 +884,14 @@ export function SplineEditor() {
         )}
 
         {/* Render race track */}
-        {isLoaded && trackData && (
+        {isLoaded && trackData && showTrack && (
           <RaceTrack
             key={`track-${trackData.id}`}
             baseStrokeWidth={baseStrokeWidth}
             closed={trackData.splinePath.closed}
             corners={trackData.corners}
             cornerToolMode={editorState.cornerToolMode}
+            countdownTextColor={countdownTextColor}
             debugMode={editorState.debugMode}
             editingMode={editorState.editingMode}
             points={trackData.splinePath.points || []}
@@ -958,8 +963,11 @@ export function SplineEditor() {
           (c) => c.id === editorState.selectedCorner
         )}
         selectedPointIndex={selectedPointIndex}
+        showTrack={showTrack}
         splineToolMode={editorState.splineToolMode}
         trackColor={trackColor}
+        countdownTextColor={countdownTextColor}
+        onCountdownTextColorChange={setCountdownTextColor}
         trackMetadata={trackData?.metadata}
         trackWidth={trackWidth}
         onBaseStrokeWidthChange={setBaseStrokeWidth}
@@ -975,6 +983,7 @@ export function SplineEditor() {
         onRemoveSelectedPoint={handleRemoveSelectedPoint}
         onSplineToolModeChange={handleSplineToolModeChange}
         onToggleDebug={handleDebugMode}
+        onToggleTrack={handleToggleTrack}
         onTrackColorChange={setTrackColor}
         onTrackWidthChange={handleTrackWidthChange}
       />

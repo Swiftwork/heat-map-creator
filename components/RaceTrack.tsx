@@ -38,10 +38,11 @@ interface RaceTrackProps {
   corners: Corner[];
   debugMode: boolean;
   startFinishSpaceIndex: number;
-  raceDirection: "clockwise" | "counter-clockwise";
+  raceDirection: boolean; // true = clockwise, false = counter-clockwise
   trackWidth?: number;
   trackColor?: string;
   baseStrokeWidth?: number;
+  countdownTextColor?: string;
   editingMode?: "spline" | "corners" | "metadata" | "appearance";
   cornerToolMode?: "select" | "add" | "remove";
   onSpaceClick?: (spaceIndex: number) => void;
@@ -75,7 +76,7 @@ interface InnerSidePath {
 }
 
 interface CheckerSegment extends SegmentLine {
-  color: "white" | "black";
+  color: "white" | "black" | "red";
 }
 
 interface StartFinishVisual {
@@ -92,6 +93,11 @@ interface CornerVisual {
   line: SegmentLine;
   badge: Vec2;
   rotation: number;
+}
+
+interface CornerCheckeredLine {
+  corner: Corner;
+  segments: CheckerSegment[];
 }
 
 const evaluateCubicBezier = (
@@ -355,7 +361,7 @@ const buildInnerSidePaths = (
 const computeSpaceCountdowns = (
   corners: Corner[],
   spaces: Space[],
-  raceDirection: "clockwise" | "counter-clockwise"
+  raceDirection: boolean // true = clockwise, false = counter-clockwise
 ): Map<number, number> => {
   if (corners.length === 0 || spaces.length === 0) {
     return new Map();
@@ -369,22 +375,21 @@ const computeSpaceCountdowns = (
   spaces.forEach((space) => {
     let nextCorner: Corner | undefined;
 
-    if (raceDirection === "clockwise") {
-      // Find next corner in clockwise direction (increasing indices)
+    if (raceDirection) {
+      // For clockwise (true), find the next corner in ascending order
       nextCorner =
         sortedCorners.find((corner) => corner.spaceIndex > space.index) ??
         sortedCorners[0];
     } else {
-      // For counter-clockwise, find the next corner (decreasing indices)
-      // This is the corner with the highest spaceIndex that is still less than current space
-      let maxIndex = -1;
-      for (const corner of sortedCorners) {
-        if (corner.spaceIndex < space.index && corner.spaceIndex > maxIndex) {
-          maxIndex = corner.spaceIndex;
-          nextCorner = corner;
-        }
-      }
-      // If no corner found before current space, wrap to the last corner
+      // For counter-clockwise (false), find the next corner in descending order
+      // We want the corner that comes AFTER the current space when going backwards
+      // So we find the corner with spaceIndex <= current space (including current space)
+      nextCorner = sortedCorners
+        .slice()
+        .reverse()
+        .find((corner) => corner.spaceIndex <= space.index);
+
+      // If no corner found with smaller or equal index, wrap around to the last corner
       if (!nextCorner) {
         nextCorner = sortedCorners[sortedCorners.length - 1];
       }
@@ -395,29 +400,33 @@ const computeSpaceCountdowns = (
     }
 
     let spacesToCorner: number;
-    if (raceDirection === "clockwise") {
+
+    if (raceDirection) {
+      // For clockwise (true)
       spacesToCorner = nextCorner.spaceIndex - space.index;
-      if (spacesToCorner <= 0) {
+      if (spacesToCorner < 0) {
         spacesToCorner = spaces.length - space.index + nextCorner.spaceIndex;
       }
     } else {
-      // For counter-clockwise, calculate distance going backwards (decreasing indices)
+      // For counter-clockwise (false), calculate distance going backwards
       spacesToCorner = space.index - nextCorner.spaceIndex;
-      if (spacesToCorner <= 0) {
-        // Wrap around the track
+      if (spacesToCorner < 0) {
+        // If we wrapped around, add the total spaces length
         spacesToCorner = space.index + spaces.length - nextCorner.spaceIndex;
       }
     }
 
-    // Don't show countdown on the corner space itself
-    const isCornerSpace = corners.some((c) => c.spaceIndex === space.index);
-    if (isCornerSpace) {
-      return;
-    }
-
     // Show countdown including 0
+    // For clockwise: exclude the corner space itself
+    // For counter-clockwise: include the corner space and only reset after
     if (spacesToCorner >= 0) {
-      countdowns.set(space.index, spacesToCorner);
+      if (raceDirection) {
+        // For clockwise (true), exclude the corner space itself
+        countdowns.set(space.index, spacesToCorner - 1);
+      } else {
+        // For counter-clockwise (false), include the corner space (don't subtract 1)
+        countdowns.set(space.index, spacesToCorner);
+      }
     }
   });
 
@@ -518,8 +527,6 @@ const computeCornerVisuals = (
   }
 
   const validSpaces = new Set(spaces.map((space) => space.index));
-  // Extend to match the offset inner side paths
-  const extendedWidth = halfTrackWidth + baseStrokeWidth;
 
   return corners.reduce<CornerVisual[]>((visuals, corner) => {
     if (!validSpaces.has(corner.spaceIndex)) {
@@ -542,16 +549,18 @@ const computeCornerVisuals = (
     const perp = perpendicular(normal);
     const badgeOffset = corner.innerSide === "left" ? -1 : 1;
 
-    // Corner lines extend from outer edge to the speed dial badge on the inner side
-    const outerEdgeDistance =
-      corner.innerSide === "left" ? extendedWidth : -extendedWidth;
-    const innerEdgeDistance = badgeOffset * flagOffset;
+    // Corner lines extend from the badge across the entire track to the opposite outer edge
+    const badgeDistance = badgeOffset * flagOffset;
+    const oppositeOuterEdgeDistance =
+      corner.innerSide === "left"
+        ? halfTrackWidth - baseStrokeWidth * 2 // Right outer edge
+        : -halfTrackWidth + baseStrokeWidth * 2; // Left outer edge
 
     const line: SegmentLine = {
-      x1: centerPoint.x + perp.x * outerEdgeDistance,
-      y1: centerPoint.y + perp.y * outerEdgeDistance,
-      x2: centerPoint.x + perp.x * innerEdgeDistance,
-      y2: centerPoint.y + perp.y * innerEdgeDistance,
+      x1: centerPoint.x + perp.x * badgeDistance,
+      y1: centerPoint.y + perp.y * badgeDistance,
+      x2: centerPoint.x + perp.x * oppositeOuterEdgeDistance,
+      y2: centerPoint.y + perp.y * oppositeOuterEdgeDistance,
     };
 
     const badge: Vec2 = {
@@ -568,6 +577,166 @@ const computeCornerVisuals = (
 
     visuals.push({ corner, line, badge, rotation });
     return visuals;
+  }, []);
+};
+
+const computeCornerCheckeredLines = (
+  closed: boolean,
+  corners: Corner[],
+  spaces: Space[],
+  bezierSegments: ReturnType<typeof pointsToBezierSegments>,
+  segmentArcLength: number,
+  totalArcLength: number,
+  halfTrackWidth: number,
+  baseStrokeWidth: number
+): CornerCheckeredLine[] => {
+  if (
+    !closed ||
+    corners.length === 0 ||
+    bezierSegments.length === 0 ||
+    segmentArcLength === 0
+  ) {
+    return [];
+  }
+
+  const validSpaces = new Set(spaces.map((space) => space.index));
+  const sortedCorners = [...corners].sort(
+    (a, b) => a.spaceIndex - b.spaceIndex
+  );
+
+  return corners.reduce<CornerCheckeredLine[]>((checkeredLines, corner) => {
+    if (!validSpaces.has(corner.spaceIndex)) {
+      return checkeredLines;
+    }
+
+    // Find the next corner to determine the segment length
+    const cornerIndex = sortedCorners.findIndex((c) => c.id === corner.id);
+    const nextCorner = sortedCorners[(cornerIndex + 1) % sortedCorners.length];
+
+    if (!nextCorner) {
+      return checkeredLines;
+    }
+
+    // Calculate the start and end distances for the checkered line
+    // Start before the corner and end after the corner (2 segments total)
+    const startDistance = (corner.spaceIndex - 1.5) * segmentArcLength; // Start one segment before corner
+    const endDistance = (corner.spaceIndex + 0.5) * segmentArcLength; // End one segment after corner
+
+    // Handle wrapping around the track
+    let adjustedStartDistance = startDistance;
+    let adjustedEndDistance = endDistance;
+
+    if (startDistance < 0) {
+      adjustedStartDistance = totalArcLength + startDistance;
+    }
+    if (endDistance > totalArcLength) {
+      adjustedEndDistance = endDistance - totalArcLength;
+    }
+
+    const sectionLength = adjustedEndDistance - adjustedStartDistance;
+    const numSamples = Math.max(Math.floor(sectionLength / 5), 50); // Sample every 5 units
+    const checkeredSegments: CheckerSegment[] = [];
+
+    // Generate points along the outer edge on the same side as the corner badge
+    // Move checkered line in by half of the track stroke width
+    const strokeOffset = baseStrokeWidth / 2;
+    const outerEdgeOffset =
+      corner.innerSide === "left"
+        ? -halfTrackWidth + baseStrokeWidth * 2 - strokeOffset // Left outer edge (same side as badge) - offset
+        : halfTrackWidth - baseStrokeWidth * 2 + strokeOffset; // Right outer edge (same side as badge) + offset
+
+    // Generate points along the track edge
+    const trackPoints: Vec2[] = [];
+    for (let i = 0; i <= numSamples; i++) {
+      const progress = i / numSamples;
+      let targetDistance = adjustedStartDistance + sectionLength * progress;
+
+      // Handle wrapping around the track
+      if (targetDistance > totalArcLength) {
+        targetDistance -= totalArcLength;
+      }
+
+      const { segmentIndex, t } = findTForDistance(
+        bezierSegments,
+        targetDistance
+      );
+      const centerPoint = evaluateChainAtT(bezierSegments, segmentIndex, t);
+      const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
+      const normal = normalizeVector(tangent);
+
+      if (!normal) {
+        continue;
+      }
+
+      const perp = perpendicular(normal);
+      const outerPoint = {
+        x: centerPoint.x + perp.x * outerEdgeOffset,
+        y: centerPoint.y + perp.y * outerEdgeOffset,
+      };
+
+      trackPoints.push(outerPoint);
+    }
+
+    // Create consistent checkered segments with precise dash widths
+    const dashWidth = baseStrokeWidth * 1.5; // Use the exact line thickness as dash width
+    let currentColor: "white" | "red" = "white";
+    let currentSegmentStart = 0;
+    let accumulatedLength = 0;
+
+    // Calculate total length of the track section
+    let totalLength = 0;
+    for (let i = 1; i < trackPoints.length; i++) {
+      const prev = trackPoints[i - 1];
+      const curr = trackPoints[i];
+      if (!prev || !curr) continue;
+      totalLength += Math.hypot(curr.x - prev.x, curr.y - prev.y);
+    }
+
+    // Calculate number of dashes needed
+    const numDashes = Math.floor(totalLength / dashWidth);
+    const actualDashWidth = totalLength / numDashes; // Adjust dash width to fit evenly
+
+    for (let i = 1; i < trackPoints.length; i++) {
+      const prev = trackPoints[i - 1];
+      const curr = trackPoints[i];
+      if (!prev || !curr) continue;
+
+      const segmentLength = Math.hypot(curr.x - prev.x, curr.y - prev.y);
+      accumulatedLength += segmentLength;
+
+      if (accumulatedLength >= actualDashWidth) {
+        // Create a checkered segment
+        checkeredSegments.push({
+          color: currentColor,
+          x1: trackPoints[currentSegmentStart]?.x ?? 0,
+          y1: trackPoints[currentSegmentStart]?.y ?? 0,
+          x2: curr.x,
+          y2: curr.y,
+        });
+
+        // Switch color and reset for next segment
+        currentColor = currentColor === "white" ? "red" : "white";
+        currentSegmentStart = i;
+        accumulatedLength = 0;
+      }
+    }
+
+    // Add the final segment if there's remaining length
+    if (accumulatedLength > 0 && currentSegmentStart < trackPoints.length - 1) {
+      const lastPoint = trackPoints[trackPoints.length - 1];
+      if (lastPoint) {
+        checkeredSegments.push({
+          color: currentColor,
+          x1: trackPoints[currentSegmentStart]?.x ?? 0,
+          y1: trackPoints[currentSegmentStart]?.y ?? 0,
+          x2: lastPoint.x,
+          y2: lastPoint.y,
+        });
+      }
+    }
+
+    checkeredLines.push({ corner, segments: checkeredSegments });
+    return checkeredLines;
   }, []);
 };
 
@@ -651,6 +820,7 @@ export function RaceTrack({
   trackWidth = DEFAULT_TRACK_WIDTH,
   trackColor,
   baseStrokeWidth = 3,
+  countdownTextColor,
   editingMode = "spline",
   cornerToolMode = "select",
   onSpaceClick: _onSpaceClick,
@@ -777,6 +947,30 @@ export function RaceTrack({
     ]
   );
 
+  const cornerCheckeredLines = useMemo(
+    () =>
+      computeCornerCheckeredLines(
+        closed,
+        corners,
+        spaces,
+        bezierSegments,
+        segmentArcLength,
+        totalArcLength,
+        halfTrackWidth,
+        baseStrokeWidth
+      ),
+    [
+      closed,
+      corners,
+      spaces,
+      bezierSegments,
+      segmentArcLength,
+      totalArcLength,
+      halfTrackWidth,
+      baseStrokeWidth,
+    ]
+  );
+
   const startFinishVisual = useMemo(
     () =>
       buildStartFinishVisual(
@@ -889,7 +1083,7 @@ export function RaceTrack({
                   r={3}
                 />
 
-                {/* Space index label - show race direction aware numbering */}
+                {/* Space index label */}
                 <text
                   fill="#4a9eff"
                   fontSize="10"
@@ -897,9 +1091,7 @@ export function RaceTrack({
                   x={position.x + 8}
                   y={position.y - 8}
                 >
-                  {raceDirection === "counter-clockwise"
-                    ? spaces.length - 1 - space.index
-                    : space.index}
+                  {space.index}
                 </text>
               </>
             )}
@@ -950,29 +1142,7 @@ export function RaceTrack({
         );
         const tangent = calculateChainTangent(bezierSegments, segmentIndex, t);
         const normal = normalizeVector(tangent);
-        if (!normal) {
-          // Fallback to text if normal calculation fails
-          return countdown <= 3 ? (
-            <CountdownBadge
-              key={`countdown-badge-fallback-${space.id}`}
-              number={countdown}
-              x={position.x}
-              y={position.y + 100}
-            />
-          ) : (
-            <text
-              key={`countdown-text-fallback-${space.id}`}
-              fill="#ffd700"
-              fontSize="12"
-              fontWeight="bold"
-              textAnchor="middle"
-              x={position.x}
-              y={position.y + 100}
-            >
-              {countdown}
-            </text>
-          );
-        }
+        if (!normal) return null;
         const perp = perpendicular(normal);
         // Position on the inside of the track (opposite direction from outer edge)
         const insideOffset = -60; // Distance from center line to inside
@@ -999,10 +1169,11 @@ export function RaceTrack({
           return (
             <text
               key={`countdown-text-${space.id}`}
-              fill="#ffd700"
+              fill={countdownTextColor || "#ffd700"}
               fontSize="12"
               fontWeight="bold"
               textAnchor="middle"
+              transform={`rotate(${rotation + 180} ${insideX} ${insideY})`}
               x={insideX}
               y={insideY}
             >
@@ -1024,6 +1195,22 @@ export function RaceTrack({
           y2={line.y2}
         />
       ))}
+
+      {/* Corner checkered lines */}
+      {cornerCheckeredLines.map(({ corner, segments: checkeredSegments }) =>
+        checkeredSegments.map((segment, index) => (
+          <line
+            key={`corner-checkered-${corner.id}-${index}`}
+            stroke={segment.color}
+            strokeLinecap="butt"
+            strokeWidth={baseStrokeWidth * 2}
+            x1={segment.x1}
+            x2={segment.x2}
+            y1={segment.y1}
+            y2={segment.y2}
+          />
+        ))
+      )}
 
       {/* Corner badges */}
       {cornerVisuals.map(({ corner, badge, rotation }) => {
