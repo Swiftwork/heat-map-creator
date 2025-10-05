@@ -1,4 +1,4 @@
-import { Input, InputProps } from '@chakra-ui/react';
+import { Input, InputProps } from "@chakra-ui/react";
 
 export function RetroInput(props: InputProps) {
   return (
@@ -9,7 +9,7 @@ export function RetroInput(props: InputProps) {
       borderWidth={2}
       color="white"
       fontFamily="monospace"
-      px = "4px"
+      px="4px"
       {...props}
     />
   );

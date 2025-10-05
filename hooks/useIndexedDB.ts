@@ -140,4 +140,3 @@ export function useIndexedDBImage(key: string) {
 
   return [image, updateImage, removeImage, isLoaded] as const;
 }
-

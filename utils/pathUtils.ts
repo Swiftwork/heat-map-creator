@@ -9,7 +9,7 @@ function distance(p1: Point, p2: Point): number {
 function perpendicularDistance(
   point: Point,
   lineStart: Point,
-  lineEnd: Point
+  lineEnd: Point,
 ): number {
   const dx = lineEnd.x - lineStart.x;
   const dy = lineEnd.y - lineStart.y;
@@ -100,7 +100,7 @@ export function pointsToBezier(points: Point[]): BezierPoint[] {
  */
 export function bezierToSvgPath(
   points: BezierPoint[],
-  closed: boolean = true
+  closed: boolean = true,
 ): string {
   if (points.length === 0) return "";
 
@@ -152,7 +152,7 @@ function cubicBezier(
   cp1: Point,
   cp2: Point,
   p1: Point,
-  t: number
+  t: number,
 ): Point {
   const t2 = t * t;
   const t3 = t2 * t;
@@ -172,7 +172,7 @@ function cubicBezier(
 export function sampleBezierPath(
   points: BezierPoint[],
   numSegments: number,
-  closed: boolean = true
+  closed: boolean = true,
 ): Point[] {
   if (points.length < 2) return [];
 
@@ -207,7 +207,7 @@ function cubicBezierTangent(
   cp1: Point,
   cp2: Point,
   p1: Point,
-  t: number
+  t: number,
 ): Point {
   const t2 = t * t;
   const mt = 1 - t;
@@ -238,7 +238,7 @@ export function offsetPoint(
   points: BezierPoint[],
   curveIndex: number,
   t: number,
-  offset: number
+  offset: number,
 ): Point {
   const current = points[curveIndex];
   const next = points[(curveIndex + 1) % points.length];

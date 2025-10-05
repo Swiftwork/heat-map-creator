@@ -3,6 +3,6 @@
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "editorconfig.editorconfig",
-    "rohit-gohri.format-code-action",
+    "rohit-gohri.format-code-action"
   ]
 }

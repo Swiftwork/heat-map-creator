@@ -6,13 +6,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useIndexedDBImage } from "@/hooks/useIndexedDB";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Corner, EditorState, Point, SplinePath, TrackData } from "@/types/spline";
-import { createSplinePathFromSegments, pointsToBezierSegments } from "@/utils/bezierChain";
+import {
+  Corner,
+  EditorState,
+  Point,
+  SplinePath,
+  TrackData,
+} from "@/types/spline";
+import {
+  createSplinePathFromSegments,
+  pointsToBezierSegments,
+} from "@/utils/bezierChain";
 import { generateId, pointsToBezier, simplifyPath } from "@/utils/pathUtils";
 import {
   createDefaultTrackMetadata,
   discretizePathToSpaces,
-  updateTrackMetadata
+  updateTrackMetadata,
 } from "@/utils/trackUtils";
 
 import { PathEditor } from "./PathEditor";
@@ -28,7 +37,7 @@ export function SplineEditor() {
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
   const [trackData, setTrackData, isLoaded] = useLocalStorage<TrackData | null>(
     STORAGE_KEY,
-    null
+    null,
   );
   const [
     backgroundImage,
@@ -38,22 +47,22 @@ export function SplineEditor() {
   ] = useIndexedDBImage(STORAGE_KEY_IMAGE);
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(
-    null
+    null,
   );
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [raceSegments, setRaceSegments] = useState(100);
   const [trackWidth, setTrackWidth] = useState(100);
-  const [trackColor, setTrackColor] = useState('#3a3a3a');
+  const [trackColor, setTrackColor] = useState("#3a3a3a");
   const [baseStrokeWidth, setBaseStrokeWidth] = useState(3);
-  
+
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
-  currentTrack: null,
-  selectedCorner: null,
-  selectedSpace: null,
-  debugMode: false,
-  editingMode: 'spline',
+    currentTrack: null,
+    selectedCorner: null,
+    selectedSpace: null,
+    debugMode: false,
+    editingMode: "spline",
   });
 
   // Update dimensions on mount and resize
@@ -63,7 +72,7 @@ export function SplineEditor() {
       const toolbar = document.querySelector('[data-toolbar="true"]');
       const tbHeight = toolbar?.getBoundingClientRect().height || 0;
       setToolbarHeight(tbHeight);
-      
+
       setDimensions({
         width: window.innerWidth,
         height: window.innerHeight - tbHeight,
@@ -73,7 +82,7 @@ export function SplineEditor() {
     updateDimensions();
     // Small delay to ensure toolbar is rendered
     const timer = setTimeout(updateDimensions, 100);
-    
+
     window.addEventListener("resize", updateDimensions);
     return () => {
       window.removeEventListener("resize", updateDimensions);
@@ -94,15 +103,15 @@ export function SplineEditor() {
       }
 
       // Initialize editor state with saved track data while preserving current mode
-      setEditorState(prev => ({
-  ...prev,
-  currentTrack: trackData,
-  debugMode: prev.debugMode ?? false,
+      setEditorState((prev) => ({
+        ...prev,
+        currentTrack: trackData,
+        debugMode: prev.debugMode ?? false,
       }));
-      
+
       // Select the spline path if it exists and we're in spline mode
       if (trackData.splinePath) {
-        setSelectedPathId(prev => prev ?? trackData.splinePath.id);
+        setSelectedPathId((prev) => prev ?? trackData.splinePath.id);
       }
     }
   }, [isLoaded, trackData]);
@@ -132,7 +141,7 @@ export function SplineEditor() {
       setSelectedPathId(null);
       setSelectedPointIndex(null);
     },
-    [getSvgPoint, trackData]
+    [getSvgPoint, trackData],
   );
 
   const handleMouseMove = useCallback(
@@ -142,7 +151,7 @@ export function SplineEditor() {
       const point = getSvgPoint(e.clientX, e.clientY);
       setCurrentPath((prev) => [...prev, point]);
     },
-    [isDrawing, getSvgPoint]
+    [isDrawing, getSvgPoint],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -157,22 +166,22 @@ export function SplineEditor() {
     const bezierPoints = pointsToBezier(simplified);
 
     // Convert points to Bezier segments
-    const bezierSegments = pointsToBezierSegments(bezierPoints, 'C1');
+    const bezierSegments = pointsToBezierSegments(bezierPoints, "C1");
 
     // Create new spline path with segments
     const splinePath: SplinePath = createSplinePathFromSegments(
       bezierSegments,
       "#3182ce",
       3,
-      true
+      true,
     );
 
     // Discretize path into spaces using segments
     const spaces = discretizePathToSpaces(bezierSegments, raceSegments);
-    
+
     // Start with empty corners - user can add them manually
     const corners: any[] = [];
-    
+
     // Create complete track data
     const newTrackData: TrackData = {
       id: generateId(),
@@ -199,13 +208,13 @@ export function SplineEditor() {
       newTrackData.metadata,
       spaces,
       corners,
-      0 // Total length would be calculated from segments
+      0, // Total length would be calculated from segments
     );
-    
+
     newTrackData.metadata = updatedMetadata;
 
     setTrackData(newTrackData);
-    setEditorState(prev => ({ ...prev, currentTrack: newTrackData }));
+    setEditorState((prev) => ({ ...prev, currentTrack: newTrackData }));
     setIsDrawing(false);
     setCurrentPath([]);
     setSelectedPathId(splinePath.id);
@@ -254,9 +263,9 @@ export function SplineEditor() {
       };
 
       setTrackData(updatedTrackData);
-      setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
+      setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
     },
-    [trackData, setTrackData]
+    [trackData, setTrackData],
   );
 
   const handleHandleDrag = useCallback(
@@ -265,7 +274,7 @@ export function SplineEditor() {
       pointIndex: number,
       type: "in" | "out",
       x: number,
-      y: number
+      y: number,
     ) => {
       if (!trackData) return;
 
@@ -311,14 +320,14 @@ export function SplineEditor() {
       };
 
       setTrackData(updatedTrackData);
-      setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
+      setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
     },
-    [trackData, setTrackData]
+    [trackData, setTrackData],
   );
 
   const handleClear = useCallback(() => {
     setTrackData(null);
-    setEditorState(prev => ({ ...prev, currentTrack: null }));
+    setEditorState((prev) => ({ ...prev, currentTrack: null }));
     setSelectedPathId(null);
     setSelectedPointIndex(null);
   }, [setTrackData]);
@@ -337,7 +346,7 @@ export function SplineEditor() {
     (imageUrl: string) => {
       updateBackgroundImage(imageUrl);
     },
-    [updateBackgroundImage]
+    [updateBackgroundImage],
   );
 
   const handleImageRemove = useCallback(() => {
@@ -345,184 +354,221 @@ export function SplineEditor() {
   }, [removeBackgroundImage]);
 
   // Update race segments and regenerate spaces
-  const handleRaceSegmentsChange = useCallback((newSegments: number) => {
-    setRaceSegments(newSegments);
-    
-    if (trackData) {
-      // Ensure we have Bezier segments - convert from points if needed
-      let bezierSegments = trackData.splinePath.segments;
-      if (!bezierSegments || bezierSegments.length === 0) {
-        const points = trackData.splinePath.points || [];
-        bezierSegments = pointsToBezierSegments(points, 'C1');
+  const handleRaceSegmentsChange = useCallback(
+    (newSegments: number) => {
+      setRaceSegments(newSegments);
+
+      if (trackData) {
+        // Ensure we have Bezier segments - convert from points if needed
+        let bezierSegments = trackData.splinePath.segments;
+        if (!bezierSegments || bezierSegments.length === 0) {
+          const points = trackData.splinePath.points || [];
+          bezierSegments = pointsToBezierSegments(points, "C1");
+        }
+
+        // Regenerate spaces with new segment count using segments
+        const newSpaces = discretizePathToSpaces(bezierSegments, newSegments);
+
+        const updatedTrackData = {
+          ...trackData,
+          spaces: newSpaces,
+          corners: [], // Keep corners empty - user manages them manually
+          discretizationSettings: {
+            ...trackData.discretizationSettings,
+            targetSpacesPerLap: newSegments,
+            currentSpacesPerLap: newSegments,
+          },
+        };
+
+        // Update metadata with calculated values
+        const updatedMetadata = updateTrackMetadata(
+          updatedTrackData.metadata,
+          newSpaces,
+          [],
+          0, // Total length would be calculated from segments
+        );
+
+        updatedTrackData.metadata = updatedMetadata;
+
+        setTrackData(updatedTrackData);
+        setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
       }
-      
-      // Regenerate spaces with new segment count using segments
-      const newSpaces = discretizePathToSpaces(bezierSegments, newSegments);
-      
-      const updatedTrackData = {
-        ...trackData,
-        spaces: newSpaces,
-        corners: [], // Keep corners empty - user manages them manually
-        discretizationSettings: {
-          ...trackData.discretizationSettings,
-          targetSpacesPerLap: newSegments,
-          currentSpacesPerLap: newSegments,
-        },
-      };
-      
-      // Update metadata with calculated values
-      const updatedMetadata = updateTrackMetadata(
-        updatedTrackData.metadata,
-        newSpaces,
-        [],
-        0 // Total length would be calculated from segments
-      );
-      
-      updatedTrackData.metadata = updatedMetadata;
-      
-      setTrackData(updatedTrackData);
-      setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
-    }
-  }, [trackData, setTrackData]);
+    },
+    [trackData, setTrackData],
+  );
 
   // Update track width
-  const handleTrackWidthChange = useCallback((newWidth: number) => {
-    setTrackWidth(newWidth);
-    
-    if (trackData) {
-      const updatedTrackData = {
-        ...trackData,
-        discretizationSettings: {
-          ...trackData.discretizationSettings,
-          trackWidth: newWidth,
-        },
-      };
-      
-      setTrackData(updatedTrackData);
-      setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
-    }
-  }, [trackData, setTrackData]);
+  const handleTrackWidthChange = useCallback(
+    (newWidth: number) => {
+      setTrackWidth(newWidth);
+
+      if (trackData) {
+        const updatedTrackData = {
+          ...trackData,
+          discretizationSettings: {
+            ...trackData.discretizationSettings,
+            trackWidth: newWidth,
+          },
+        };
+
+        setTrackData(updatedTrackData);
+        setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+      }
+    },
+    [trackData, setTrackData],
+  );
 
   // Toggle visibility handlers
   const handleDebugMode = useCallback(() => {
-    setEditorState(prev => ({ ...prev, debugMode: !prev.debugMode }));
+    setEditorState((prev) => ({ ...prev, debugMode: !prev.debugMode }));
   }, []);
 
   // Editing mode handler
-  const handleEditingModeChange = useCallback((mode: 'spline' | 'corners' | 'metadata' | 'appearance') => {
-    setEditorState(prev => ({ ...prev, editingMode: mode, selectedCorner: null }));
-    setSelectedPointIndex(null);
-  }, []);
+  const handleEditingModeChange = useCallback(
+    (mode: "spline" | "corners" | "metadata" | "appearance") => {
+      setEditorState((prev) => ({
+        ...prev,
+        editingMode: mode,
+        selectedCorner: null,
+      }));
+      setSelectedPointIndex(null);
+    },
+    [],
+  );
 
   // Metadata change handler
-  const handleMetadataChange = useCallback((updatedMetadata: any) => {
-    if (trackData) {
-      const updatedTrackData = {
-        ...trackData,
-        metadata: updatedMetadata,
-      };
-      setTrackData(updatedTrackData);
-      setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
-    }
-  }, [trackData, setTrackData]);
+  const handleMetadataChange = useCallback(
+    (updatedMetadata: any) => {
+      if (trackData) {
+        const updatedTrackData = {
+          ...trackData,
+          metadata: updatedMetadata,
+        };
+        setTrackData(updatedTrackData);
+        setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+      }
+    },
+    [trackData, setTrackData],
+  );
 
   // Helper function to calculate distance from point to line segment
-  const distanceToLineSegment = useCallback((px: number, py: number, x1: number, y1: number, x2: number, y2: number): number => {
-    const A = px - x1;
-    const B = py - y1;
-    const C = x2 - x1;
-    const D = y2 - y1;
+  const distanceToLineSegment = useCallback(
+    (
+      px: number,
+      py: number,
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+    ): number => {
+      const A = px - x1;
+      const B = py - y1;
+      const C = x2 - x1;
+      const D = y2 - y1;
 
-    const dot = A * C + B * D;
-    const lenSq = C * C + D * D;
-    let param = -1;
-    if (lenSq !== 0) param = dot / lenSq;
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      if (lenSq !== 0) param = dot / lenSq;
 
-    let xx, yy;
+      let xx, yy;
 
-    if (param < 0) {
-      xx = x1;
-      yy = y1;
-    } else if (param > 1) {
-      xx = x2;
-      yy = y2;
-    } else {
-      xx = x1 + param * C;
-      yy = y1 + param * D;
-    }
+      if (param < 0) {
+        xx = x1;
+        yy = y1;
+      } else if (param > 1) {
+        xx = x2;
+        yy = y2;
+      } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
 
-    const dx = px - xx;
-    const dy = py - yy;
-    return Math.sqrt(dx * dx + dy * dy);
-  }, []);
+      const dx = px - xx;
+      const dy = py - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    },
+    [],
+  );
 
   // Manual point editing handlers
-  const handleAddPointAtCoords = useCallback((x: number, y: number) => {
-    if (!trackData) return;
+  const handleAddPointAtCoords = useCallback(
+    (x: number, y: number) => {
+      if (!trackData) return;
 
-    // Use legacy points array for compatibility with existing PathEditor
-    const points = trackData.splinePath.points || [];
-    const newPoints = [...points];
-    
-    // Find the best place to insert the point by finding the closest segment
-    let bestInsertIndex = 0;
-    let minDistance = Infinity;
-    
-    for (let i = 0; i < newPoints.length; i++) {
-      const currentPoint = newPoints[i];
-      const nextPoint = newPoints[(i + 1) % newPoints.length];
-      
-      if (currentPoint && nextPoint) {
-        // Calculate distance from click point to line segment
-        const distance = distanceToLineSegment(x, y, currentPoint.x, currentPoint.y, nextPoint.x, nextPoint.y);
-        
-        if (distance < minDistance) {
-          minDistance = distance;
-          bestInsertIndex = i + 1;
+      // Use legacy points array for compatibility with existing PathEditor
+      const points = trackData.splinePath.points || [];
+      const newPoints = [...points];
+
+      // Find the best place to insert the point by finding the closest segment
+      let bestInsertIndex = 0;
+      let minDistance = Infinity;
+
+      for (let i = 0; i < newPoints.length; i++) {
+        const currentPoint = newPoints[i];
+        const nextPoint = newPoints[(i + 1) % newPoints.length];
+
+        if (currentPoint && nextPoint) {
+          // Calculate distance from click point to line segment
+          const distance = distanceToLineSegment(
+            x,
+            y,
+            currentPoint.x,
+            currentPoint.y,
+            nextPoint.x,
+            nextPoint.y,
+          );
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            bestInsertIndex = i + 1;
+          }
         }
       }
-    }
-    
-    // Calculate handles for the new point based on neighbors
-    const prevPoint = newPoints[bestInsertIndex - 1] || newPoints[newPoints.length - 1];
-    const nextPoint = newPoints[bestInsertIndex % newPoints.length];
-    
-    let handleIn = { x, y };
-    let handleOut = { x, y };
-    
-    if (prevPoint && nextPoint) {
-      // Calculate tangent based on neighbors
-      const tangentX = (nextPoint.x - prevPoint.x) * 0.25;
-      const tangentY = (nextPoint.y - prevPoint.y) * 0.25;
-      
-      handleIn = { x: x - tangentX, y: y - tangentY };
-      handleOut = { x: x + tangentX, y: y + tangentY };
-    }
-    
-    // Insert the new point with handles
-    const newPoint = {
-      x,
-      y,
-      handleIn,
-      handleOut,
-    };
-    
-    newPoints.splice(bestInsertIndex, 0, newPoint);
 
-    const updatedTrackData = {
-      ...trackData,
-      splinePath: {
-        ...trackData.splinePath,
-        points: newPoints,
-      },
-    };
+      // Calculate handles for the new point based on neighbors
+      const prevPoint =
+        newPoints[bestInsertIndex - 1] || newPoints[newPoints.length - 1];
+      const nextPoint = newPoints[bestInsertIndex % newPoints.length];
 
-    setTrackData(updatedTrackData);
-    setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
-    
-    // Select the newly added point
-    setSelectedPointIndex(bestInsertIndex);
-  }, [trackData, setTrackData, distanceToLineSegment]);
+      let handleIn = { x, y };
+      let handleOut = { x, y };
+
+      if (prevPoint && nextPoint) {
+        // Calculate tangent based on neighbors
+        const tangentX = (nextPoint.x - prevPoint.x) * 0.25;
+        const tangentY = (nextPoint.y - prevPoint.y) * 0.25;
+
+        handleIn = { x: x - tangentX, y: y - tangentY };
+        handleOut = { x: x + tangentX, y: y + tangentY };
+      }
+
+      // Insert the new point with handles
+      const newPoint = {
+        x,
+        y,
+        handleIn,
+        handleOut,
+      };
+
+      newPoints.splice(bestInsertIndex, 0, newPoint);
+
+      const updatedTrackData = {
+        ...trackData,
+        splinePath: {
+          ...trackData.splinePath,
+          points: newPoints,
+        },
+      };
+
+      setTrackData(updatedTrackData);
+      setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+
+      // Select the newly added point
+      setSelectedPointIndex(bestInsertIndex);
+    },
+    [trackData, setTrackData, distanceToLineSegment],
+  );
 
   const handleRemoveSelectedPoint = useCallback(() => {
     // Use legacy points array for compatibility with existing PathEditor
@@ -541,55 +587,63 @@ export function SplineEditor() {
     };
 
     setTrackData(updatedTrackData);
-    setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
-    
+    setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+
     // Clear selection
     setSelectedPointIndex(null);
   }, [trackData, setTrackData, selectedPointIndex]);
 
   // Handle space click for corner placement
-  const handleSpaceClick = useCallback((spaceIndex: number) => {
-    if (!trackData || editorState.editingMode !== 'corners') return;
+  const handleSpaceClick = useCallback(
+    (spaceIndex: number) => {
+      if (!trackData || editorState.editingMode !== "corners") return;
 
-    const existingCorner = trackData.corners.find(c => c.spaceIndex === spaceIndex);
-    
-    if (existingCorner) {
-      // Select the corner for editing
-      setEditorState(prev => ({ ...prev, selectedCorner: existingCorner.id }));
-    } else {
-      // Add new corner
-      const space = trackData.spaces.find(s => s.index === spaceIndex);
-      if (!space) return;
+      const existingCorner = trackData.corners.find(
+        (c) => c.spaceIndex === spaceIndex,
+      );
 
-      const newCorner: Corner = {
-        id: generateId(),
-        spaceIndex,
-        speedLimit: 5, // Default speed limit
-        position: space.position,
-        isAutoSuggested: false,
-        innerSide: 'left', // Default inner side
-        cornerType: 'medium',
-        difficulty: 5,
-        suggestedGear: 3,
-        heatPenalty: 0,
-        entryAngle: 0,
-        exitAngle: 0,
-        radius: 0,
-      };
+      if (existingCorner) {
+        // Select the corner for editing
+        setEditorState((prev) => ({
+          ...prev,
+          selectedCorner: existingCorner.id,
+        }));
+      } else {
+        // Add new corner
+        const space = trackData.spaces.find((s) => s.index === spaceIndex);
+        if (!space) return;
 
-      const updatedTrackData = {
-        ...trackData,
-        corners: [...trackData.corners, newCorner],
-      };
+        const newCorner: Corner = {
+          id: generateId(),
+          spaceIndex,
+          speedLimit: 5, // Default speed limit
+          position: space.position,
+          isAutoSuggested: false,
+          innerSide: "left", // Default inner side
+          cornerType: "medium",
+          difficulty: 5,
+          suggestedGear: 3,
+          heatPenalty: 0,
+          entryAngle: 0,
+          exitAngle: 0,
+          radius: 0,
+        };
 
-      setTrackData(updatedTrackData);
-      setEditorState(prev => ({ 
-        ...prev, 
-        currentTrack: updatedTrackData,
-        selectedCorner: newCorner.id 
-      }));
-    }
-  }, [trackData, editorState.editingMode, setTrackData]);
+        const updatedTrackData = {
+          ...trackData,
+          corners: [...trackData.corners, newCorner],
+        };
+
+        setTrackData(updatedTrackData);
+        setEditorState((prev) => ({
+          ...prev,
+          currentTrack: updatedTrackData,
+          selectedCorner: newCorner.id,
+        }));
+      }
+    },
+    [trackData, editorState.editingMode, setTrackData],
+  );
 
   // Remove selected corner
   const handleRemoveCorner = useCallback(() => {
@@ -597,47 +651,55 @@ export function SplineEditor() {
 
     const updatedTrackData = {
       ...trackData,
-      corners: trackData.corners.filter(c => c.id !== editorState.selectedCorner),
-    };
-
-    setTrackData(updatedTrackData);
-    setEditorState(prev => ({ 
-      ...prev, 
-      currentTrack: updatedTrackData,
-      selectedCorner: null 
-    }));
-  }, [trackData, editorState.selectedCorner, setTrackData]);
-
-  // Update selected corner properties
-  const handleUpdateCorner = useCallback((updates: Partial<Corner>) => {
-    if (!trackData || !editorState.selectedCorner) return;
-
-    const updatedTrackData = {
-      ...trackData,
-      corners: trackData.corners.map(c => 
-        c.id === editorState.selectedCorner ? { ...c, ...updates } : c
+      corners: trackData.corners.filter(
+        (c) => c.id !== editorState.selectedCorner,
       ),
     };
 
     setTrackData(updatedTrackData);
-    setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
+    setEditorState((prev) => ({
+      ...prev,
+      currentTrack: updatedTrackData,
+      selectedCorner: null,
+    }));
   }, [trackData, editorState.selectedCorner, setTrackData]);
 
+  // Update selected corner properties
+  const handleUpdateCorner = useCallback(
+    (updates: Partial<Corner>) => {
+      if (!trackData || !editorState.selectedCorner) return;
+
+      const updatedTrackData = {
+        ...trackData,
+        corners: trackData.corners.map((c) =>
+          c.id === editorState.selectedCorner ? { ...c, ...updates } : c,
+        ),
+      };
+
+      setTrackData(updatedTrackData);
+      setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+    },
+    [trackData, editorState.selectedCorner, setTrackData],
+  );
+
   // Handle start/finish line placement
-  const handleStartFinishClick = useCallback((spaceIndex: number) => {
-    if (!trackData || editorState.editingMode !== 'metadata') return;
+  const handleStartFinishClick = useCallback(
+    (spaceIndex: number) => {
+      if (!trackData || editorState.editingMode !== "metadata") return;
 
-    const updatedTrackData = {
-      ...trackData,
-      metadata: {
-        ...trackData.metadata,
-        startFinishSpaceIndex: spaceIndex,
-      },
-    };
+      const updatedTrackData = {
+        ...trackData,
+        metadata: {
+          ...trackData.metadata,
+          startFinishSpaceIndex: spaceIndex,
+        },
+      };
 
-    setTrackData(updatedTrackData);
-    setEditorState(prev => ({ ...prev, currentTrack: updatedTrackData }));
-  }, [trackData, editorState.editingMode, setTrackData]);
+      setTrackData(updatedTrackData);
+      setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+    },
+    [trackData, editorState.editingMode, setTrackData],
+  );
 
   // Generate SVG path string for current drawing
   const currentPathString =
@@ -657,7 +719,10 @@ export function SplineEditor() {
       <svg
         ref={svgRef}
         height={dimensions.height}
-        style={{ cursor: isDrawing ? "crosshair" : "default" }}
+        style={{
+          cursor: isDrawing ? "crosshair" : "default",
+          userSelect: "none",
+        }}
         width={dimensions.width}
         onMouseDown={handleMouseDown}
         onMouseLeave={handleMouseUp}
@@ -698,7 +763,7 @@ export function SplineEditor() {
         )}
 
         {/* Render spline path editor - only in spline mode */}
-        {isLoaded && trackData && editorState.editingMode === 'spline' && (
+        {isLoaded && trackData && editorState.editingMode === "spline" && (
           <PathEditor
             key={trackData.splinePath.id}
             closed={trackData.splinePath.closed}
@@ -706,7 +771,9 @@ export function SplineEditor() {
             isSelected={selectedPathId === trackData.splinePath.id}
             points={trackData.splinePath.points || []}
             selectedPointIndex={
-              selectedPathId === trackData.splinePath.id ? selectedPointIndex : null
+              selectedPathId === trackData.splinePath.id
+                ? selectedPointIndex
+                : null
             }
             strokeWidth={trackData.splinePath.strokeWidth}
             onHandleDrag={(index, type, x, y) =>
@@ -714,7 +781,9 @@ export function SplineEditor() {
             }
             onPathClick={() => handlePathClick(trackData.splinePath.id)}
             onPathClickWithCoords={handleAddPointAtCoords}
-            onPointClick={(index) => handlePointClick(trackData.splinePath.id, index)}
+            onPointClick={(index) =>
+              handlePointClick(trackData.splinePath.id, index)
+            }
             onPointDrag={(index, x, y) =>
               handlePointDrag(trackData.splinePath.id, index, x, y)
             }
@@ -741,7 +810,9 @@ export function SplineEditor() {
         editingMode={editorState.editingMode}
         hasImage={!!backgroundImage}
         raceSegments={raceSegments}
-        selectedCorner={trackData?.corners.find(c => c.id === editorState.selectedCorner)}
+        selectedCorner={trackData?.corners.find(
+          (c) => c.id === editorState.selectedCorner,
+        )}
         selectedPointIndex={selectedPointIndex}
         trackColor={trackColor}
         trackMetadata={trackData?.metadata}
