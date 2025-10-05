@@ -15,7 +15,8 @@ import { bezierToSvgPath } from "@/utils/pathUtils";
 import { CornerBadge } from "./CornerBadge";
 import { CountdownBadge } from "./CountdownBadge";
 
-const DEFAULT_TRACK_WIDTH = 100;
+const BASE_TRACK_WIDTH = 100;
+const BASE_STROKE_WIDTH = 3;
 const SAMPLES_PER_CURVE = 100;
 const CHECKER_SIZE = 10;
 const FLAG_SIZE = 30;
@@ -39,9 +40,8 @@ interface RaceTrackProps {
   debugMode: boolean;
   startFinishSpaceIndex: number;
   raceDirection: boolean; // true = clockwise, false = counter-clockwise
-  trackWidth?: number;
+  scale?: number; // Scale percentage (100 = 100%)
   trackColor?: string;
-  baseStrokeWidth?: number;
   countdownTextColor?: string;
   editingMode?: "spline" | "corners" | "metadata" | "appearance";
   cornerToolMode?: "select" | "add" | "remove";
@@ -638,12 +638,11 @@ const computeCornerCheckeredLines = (
     const checkeredSegments: CheckerSegment[] = [];
 
     // Generate points along the outer edge on the same side as the corner badge
-    // Move checkered line in by half of the track stroke width
-    const strokeOffset = baseStrokeWidth / 2;
+    // Position checkered line at the same distance from center as the outer strokes
     const outerEdgeOffset =
       corner.innerSide === "left"
-        ? -halfTrackWidth + baseStrokeWidth * 2 - strokeOffset // Left outer edge (same side as badge) - offset
-        : halfTrackWidth - baseStrokeWidth * 2 + strokeOffset; // Right outer edge (same side as badge) + offset
+        ? -halfTrackWidth + baseStrokeWidth // Left outer edge (same side as badge)
+        : halfTrackWidth - baseStrokeWidth; // Right outer edge (same side as badge)
 
     // Generate points along the track edge
     const trackPoints: Vec2[] = [];
@@ -817,9 +816,8 @@ export function RaceTrack({
   debugMode,
   startFinishSpaceIndex,
   raceDirection,
-  trackWidth = DEFAULT_TRACK_WIDTH,
+  scale = 100,
   trackColor,
-  baseStrokeWidth = 3,
   countdownTextColor,
   editingMode = "spline",
   cornerToolMode = "select",
@@ -829,6 +827,9 @@ export function RaceTrack({
   onCornerClick,
   onTrackClickWithCoords,
 }: RaceTrackProps) {
+  // Derive trackWidth and baseStrokeWidth from scale
+  const trackWidth = BASE_TRACK_WIDTH * (scale / 100);
+  const baseStrokeWidth = BASE_STROKE_WIDTH * (scale / 100);
   const halfTrackWidth = trackWidth / 2;
   const flagOffset = halfTrackWidth + 30;
 
@@ -842,12 +843,21 @@ export function RaceTrack({
     [points, closed]
   );
   const outerLeftPath = useMemo(
-    () => buildOffsetPath(points, closed, halfTrackWidth - baseStrokeWidth * 2),
+    () =>
+      buildOffsetPath(
+        points,
+        closed,
+        halfTrackWidth - baseStrokeWidth * 2 + baseStrokeWidth / 2
+      ),
     [points, closed, halfTrackWidth, baseStrokeWidth]
   );
   const outerRightPath = useMemo(
     () =>
-      buildOffsetPath(points, closed, -halfTrackWidth + baseStrokeWidth * 2),
+      buildOffsetPath(
+        points,
+        closed,
+        -halfTrackWidth + baseStrokeWidth * 2 - baseStrokeWidth / 2
+      ),
     [points, closed, halfTrackWidth, baseStrokeWidth]
   );
   const trackFillPath = useMemo(
@@ -1041,10 +1051,10 @@ export function RaceTrack({
         d={centerPath}
         fill="none"
         stroke="white"
-        strokeDasharray={`${baseStrokeWidth * 3} ${baseStrokeWidth * 2}`}
+        strokeDasharray={`${baseStrokeWidth * 3} ${baseStrokeWidth * 2 * 1.5}`}
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeWidth={baseStrokeWidth / 2}
+        strokeWidth={(baseStrokeWidth / 2) * 1.5}
       />
 
       {/* Segment lines across the track */}

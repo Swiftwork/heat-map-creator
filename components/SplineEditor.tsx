@@ -53,10 +53,9 @@ export function SplineEditor() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [raceSegments, setRaceSegments] = useState(100);
-  const [trackWidth, setTrackWidth] = useState(100);
+  const [scale, setScale] = useState(100);
   const [trackColor, setTrackColor] = useState("#3a3a3a");
   const [countdownTextColor, setCountdownTextColor] = useState("#ffd700");
-  const [baseStrokeWidth, setBaseStrokeWidth] = useState(3);
   const [showTrack, setShowTrack] = useState(true);
 
   // New editor state
@@ -115,9 +114,9 @@ export function SplineEditor() {
       const { discretizationSettings } = migratedTrackData;
       if (discretizationSettings) {
         const savedSegments = discretizationSettings.targetSpacesPerLap;
-        const savedTrackWidth = discretizationSettings.trackWidth;
+        const savedScale = discretizationSettings.trackWidth; // trackWidth now represents scale %
         if (savedSegments) setRaceSegments(savedSegments);
-        if (savedTrackWidth) setTrackWidth(savedTrackWidth);
+        if (savedScale) setScale(savedScale);
       }
 
       // Initialize editor state with saved track data while preserving current mode
@@ -443,17 +442,17 @@ export function SplineEditor() {
     [trackData, setTrackData]
   );
 
-  // Update track width
-  const handleTrackWidthChange = useCallback(
-    (newWidth: number) => {
-      setTrackWidth(newWidth);
+  // Update scale
+  const handleScaleChange = useCallback(
+    (newScale: number) => {
+      setScale(newScale);
 
       if (trackData) {
         const updatedTrackData = {
           ...trackData,
           discretizationSettings: {
             ...trackData.discretizationSettings,
-            trackWidth: newWidth,
+            trackWidth: newScale, // trackWidth now represents scale %
           },
         };
 
@@ -887,7 +886,6 @@ export function SplineEditor() {
         {isLoaded && trackData && showTrack && (
           <RaceTrack
             key={`track-${trackData.id}`}
-            baseStrokeWidth={baseStrokeWidth}
             closed={trackData.splinePath.closed}
             corners={trackData.corners}
             cornerToolMode={editorState.cornerToolMode}
@@ -896,12 +894,12 @@ export function SplineEditor() {
             editingMode={editorState.editingMode}
             points={trackData.splinePath.points || []}
             raceDirection={trackData.metadata.raceDirection}
+            scale={trackData.discretizationSettings.trackWidth}
             segments={raceSegments}
             selectedCorner={editorState.selectedCorner}
             spaces={trackData.spaces}
             startFinishSpaceIndex={trackData.metadata.startFinishSpaceIndex}
             trackColor={trackColor}
-            trackWidth={trackData.discretizationSettings.trackWidth}
             onCornerClick={handleCornerClick}
             onSpaceClick={handleSpaceClick}
             onStartFinishClick={handleStartFinishClick}
@@ -953,12 +951,13 @@ export function SplineEditor() {
       </svg>
 
       <Toolbar
-        baseStrokeWidth={baseStrokeWidth}
         cornerToolMode={editorState.cornerToolMode}
+        countdownTextColor={countdownTextColor}
         debugMode={editorState.debugMode}
         editingMode={editorState.editingMode}
         hasImage={!!backgroundImage}
         raceSegments={raceSegments}
+        scale={scale}
         selectedCorner={trackData?.corners.find(
           (c) => c.id === editorState.selectedCorner
         )}
@@ -966,26 +965,23 @@ export function SplineEditor() {
         showTrack={showTrack}
         splineToolMode={editorState.splineToolMode}
         trackColor={trackColor}
-        countdownTextColor={countdownTextColor}
-        onCountdownTextColorChange={setCountdownTextColor}
         trackMetadata={trackData?.metadata}
-        trackWidth={trackWidth}
-        onBaseStrokeWidthChange={setBaseStrokeWidth}
         onClear={handleClear}
         onCornerRemove={handleRemoveCorner}
         onCornerToolModeChange={handleCornerToolModeChange}
         onCornerUpdate={handleUpdateCorner}
+        onCountdownTextColorChange={setCountdownTextColor}
         onEditingModeChange={handleEditingModeChange}
         onImageRemove={handleImageRemove}
         onImageUpload={handleImageUpload}
         onMetadataChange={handleMetadataChange}
         onRaceSegmentsChange={handleRaceSegmentsChange}
         onRemoveSelectedPoint={handleRemoveSelectedPoint}
+        onScaleChange={handleScaleChange}
         onSplineToolModeChange={handleSplineToolModeChange}
         onToggleDebug={handleDebugMode}
         onToggleTrack={handleToggleTrack}
         onTrackColorChange={setTrackColor}
-        onTrackWidthChange={handleTrackWidthChange}
       />
     </Box>
   );

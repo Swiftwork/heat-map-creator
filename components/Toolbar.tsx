@@ -25,10 +25,8 @@ interface ToolbarProps {
   onImageUpload: (imageUrl: string) => void;
   onImageRemove: () => void;
   hasImage: boolean;
-  trackWidth: number;
-  onTrackWidthChange: (value: number) => void;
-  baseStrokeWidth: number;
-  onBaseStrokeWidthChange: (value: number) => void;
+  scale: number;
+  onScaleChange: (value: number) => void;
   raceSegments: number;
   onRaceSegmentsChange: (value: number) => void;
   // New props for Section B features
@@ -78,10 +76,8 @@ export function Toolbar({
   onImageRemove,
   raceSegments,
   onRaceSegmentsChange,
-  trackWidth,
-  onTrackWidthChange,
-  baseStrokeWidth: baseStrokeWidth,
-  onBaseStrokeWidthChange: onBaseStrokeWidthChange,
+  scale,
+  onScaleChange,
   hasImage,
   debugMode,
   onToggleDebug,
@@ -131,10 +127,10 @@ export function Toolbar({
     }
   };
 
-  const handleTrackWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value > 0) {
-      onTrackWidthChange(value);
+      onScaleChange(value);
     }
   };
 
@@ -499,17 +495,18 @@ export function Toolbar({
                 <HStack gap={4} justify="center" wrap="wrap">
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                      Width:
+                      Scale:
                     </Text>
                     <RetroInput
                       max={300}
                       min={20}
                       size="sm"
                       type="number"
-                      value={trackWidth}
+                      value={scale}
                       width="80px"
-                      onChange={handleTrackWidthChange}
+                      onChange={handleScaleChange}
                     />
+                    <Text fontSize="sm">%</Text>
                   </HStack>
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
@@ -521,22 +518,6 @@ export function Toolbar({
                       width="80px"
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         onTrackColorChange?.(e.target.value)
-                      }
-                    />
-                  </HStack>
-                  <HStack gap={2}>
-                    <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
-                      Edge Width:
-                    </Text>
-                    <RetroInput
-                      max={10}
-                      min={1}
-                      size="sm"
-                      type="number"
-                      value={baseStrokeWidth}
-                      width="80px"
-                      onChange={(e) =>
-                        onBaseStrokeWidthChange(parseInt(e.target.value, 10))
                       }
                     />
                   </HStack>
