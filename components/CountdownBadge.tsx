@@ -5,6 +5,7 @@ interface CountdownBadgeProps {
   x: number;
   y: number;
   rotation?: number;
+  scale?: number; // Scale percentage (100 = 100%)
 }
 
 // Constants for badge sizing and styling
@@ -37,19 +38,24 @@ export function CountdownBadge({
   x,
   y,
   rotation = 0,
+  scale = 100,
 }: CountdownBadgeProps) {
   // Only show for valid countdown numbers
   if (number < MIN_COUNTDOWN || number > MAX_COUNTDOWN) {
     return null;
   }
 
-  const fontSize = BADGE_SIZE * FONT_SIZE_RATIO;
-  const textRotationY = 50 + (BADGE_SIZE * TEXT_ROTATION_OFFSET_RATIO) / SCALE_FACTOR;
-  const textY = 50 + (BADGE_SIZE * TEXT_Y_OFFSET_RATIO) / SCALE_FACTOR;
+  // Apply scale to badge size while keeping final values the same
+  const scaledBadgeSize = BADGE_SIZE * (scale / 100);
+  const scaledBadgeRadius = scaledBadgeSize / 2;
+  const scaledScaleFactor = scaledBadgeSize / 100;
+  const fontSize = scaledBadgeSize * FONT_SIZE_RATIO;
+  const textRotationY = 50 + (scaledBadgeSize * TEXT_ROTATION_OFFSET_RATIO) / scaledScaleFactor;
+  const textY = 50 + (scaledBadgeSize * TEXT_Y_OFFSET_RATIO) / scaledScaleFactor;
 
   return (
     <g
-      transform={`translate(${x - BADGE_RADIUS}, ${y - BADGE_RADIUS}) scale(${SCALE_FACTOR}) rotate(${rotation} 50 50)`}
+      transform={`translate(${x - scaledBadgeRadius}, ${y - scaledBadgeRadius}) scale(${scaledScaleFactor}) rotate(${rotation} 50 50)`}
     >
       {/* Outer badge background */}
       <rect
@@ -94,7 +100,7 @@ export function CountdownBadge({
         fill={COLORS.BLACK}
         style={{
           fontFamily: "Inter, sans-serif",
-          fontSize: `${fontSize / SCALE_FACTOR}px`,
+          fontSize: `${fontSize / scaledScaleFactor}px`,
           fontWeight: 700,
         }}
         textAnchor="middle"

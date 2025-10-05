@@ -18,10 +18,10 @@ import { CountdownBadge } from "./CountdownBadge";
 const BASE_TRACK_WIDTH = 100;
 const BASE_STROKE_WIDTH = 3;
 const SAMPLES_PER_CURVE = 100;
-const FLAG_SIZE = 30;
+const BASE_FLAG_SIZE = 30;
 
 // Corner and metadata graphics configuration
-const CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
+const BASE_CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
 const CORNER_SELECTED_STROKE_WIDTH = 3;
 const CORNER_DEFAULT_STROKE_WIDTH = 1;
 const CORNER_OPACITY = 0.6;
@@ -831,7 +831,9 @@ export function RaceTrack({
   const trackWidth = BASE_TRACK_WIDTH * (scale / 100);
   const baseStrokeWidth = BASE_STROKE_WIDTH * (scale / 100);
   const halfTrackWidth = trackWidth / 2;
-  const flagOffset = halfTrackWidth + 30;
+  const flagOffset = halfTrackWidth + 30 * (scale / 100);
+  const flagSize = BASE_FLAG_SIZE * (scale / 100);
+  const circleRadius = BASE_CIRCLE_RADIUS * (scale / 100);
 
   const bezierSegments = useMemo(
     () => pointsToBezierSegments(points, "C1"),
@@ -1090,16 +1092,16 @@ export function RaceTrack({
                   cy={position.y}
                   fill={CORNER_COLOR}
                   opacity={0.7}
-                  r={3}
+                  r={3 * (scale / 100)}
                 />
 
                 {/* Space index label */}
                 <text
                   fill="#4a9eff"
-                  fontSize="10"
+                  fontSize={10 * (scale / 100)}
                   fontWeight="bold"
-                  x={position.x + 8}
-                  y={position.y - 8}
+                  x={position.x + 8 * (scale / 100)}
+                  y={position.y - 8 * (scale / 100)}
                 >
                   {space.index}
                 </text>
@@ -1115,7 +1117,7 @@ export function RaceTrack({
                 cy={position.y}
                 fill={isStartFinish ? METADATA_SELECTED_COLOR : "transparent"}
                 opacity={CORNER_OPACITY}
-                r={CIRCLE_RADIUS}
+                r={circleRadius}
                 stroke={
                   isStartFinish
                     ? METADATA_SELECTED_COLOR
@@ -1123,8 +1125,8 @@ export function RaceTrack({
                 }
                 strokeWidth={
                   isStartFinish
-                    ? CORNER_SELECTED_STROKE_WIDTH
-                    : CORNER_DEFAULT_STROKE_WIDTH
+                    ? CORNER_SELECTED_STROKE_WIDTH * (scale / 100)
+                    : CORNER_DEFAULT_STROKE_WIDTH * (scale / 100)
                 }
                 style={{ cursor: "pointer" }}
                 onClick={() => onStartFinishClick?.(space.index)}
@@ -1155,7 +1157,7 @@ export function RaceTrack({
         if (!normal) return null;
         const perp = perpendicular(normal);
         // Position on the inside of the track (opposite direction from outer edge)
-        const insideOffset = -60; // Distance from center line to inside
+        const insideOffset = -60 * (scale / 100); // Distance from center line to inside, scaled
         const insideX = position.x - perp.x * insideOffset;
         const insideY = position.y - perp.y * insideOffset;
         // Calculate rotation angle from tangent vector (in degrees)
@@ -1163,7 +1165,7 @@ export function RaceTrack({
         // Use CountdownBadge for numbers 0-3, fallback to text for higher numbers
         if (countdown <= 3) {
           // Additional offset for CountdownBadge to move it further inside
-          const badgeOffset = -5;
+          const badgeOffset = -5 * (scale / 100);
           const badgeX = insideX - perp.x * badgeOffset;
           const badgeY = insideY - perp.y * badgeOffset;
           return (
@@ -1171,6 +1173,7 @@ export function RaceTrack({
               key={`countdown-badge-${space.id}`}
               number={countdown}
               rotation={rotation}
+              scale={scale}
               x={badgeX}
               y={badgeY}
             />
@@ -1180,7 +1183,7 @@ export function RaceTrack({
             <text
               key={`countdown-text-${space.id}`}
               fill={countdownTextColor || "#ffd700"}
-              fontSize="12"
+              fontSize={12 * (scale / 100)}
               fontWeight="bold"
               textAnchor="middle"
               transform={`rotate(${rotation + 180} ${insideX} ${insideY})`}
@@ -1231,6 +1234,7 @@ export function RaceTrack({
             isRemoveMode={cornerToolMode === "remove"}
             isSelected={isSelected}
             rotation={rotation}
+            scale={scale}
             speedLimit={corner.speedLimit}
             x={badge.x}
             y={badge.y}
@@ -1260,20 +1264,20 @@ export function RaceTrack({
           >
             <line
               stroke="#333"
-              strokeWidth={2}
-              x1={startFinishVisual.flag.x - FLAG_SIZE * 0.3}
-              x2={startFinishVisual.flag.x - FLAG_SIZE * 0.3}
-              y1={startFinishVisual.flag.y - FLAG_SIZE * 0.3}
-              y2={startFinishVisual.flag.y + FLAG_SIZE * 0.8}
+              strokeWidth={2 * (scale / 100)}
+              x1={startFinishVisual.flag.x - flagSize * 0.3}
+              x2={startFinishVisual.flag.x - flagSize * 0.3}
+              y1={startFinishVisual.flag.y - flagSize * 0.3}
+              y2={startFinishVisual.flag.y + flagSize * 0.8}
             />
             <rect
               fill="white"
-              height={FLAG_SIZE}
+              height={flagSize}
               stroke="#333"
-              strokeWidth={1}
-              width={FLAG_SIZE}
-              x={startFinishVisual.flag.x - FLAG_SIZE * 0.3}
-              y={startFinishVisual.flag.y - FLAG_SIZE * 0.3}
+              strokeWidth={1 * (scale / 100)}
+              width={flagSize}
+              x={startFinishVisual.flag.x - flagSize * 0.3}
+              y={startFinishVisual.flag.y - flagSize * 0.3}
             />
             {[0, 1, 2, 3, 4].map((row) =>
               [0, 1, 2, 3, 4].map((col) => {
@@ -1282,17 +1286,17 @@ export function RaceTrack({
                   <rect
                     key={`flag-${row}-${col}`}
                     fill="black"
-                    height={FLAG_SIZE / 5}
-                    width={FLAG_SIZE / 5}
+                    height={flagSize / 5}
+                    width={flagSize / 5}
                     x={
                       startFinishVisual.flag.x -
-                      FLAG_SIZE * 0.3 +
-                      col * (FLAG_SIZE / 5)
+                      flagSize * 0.3 +
+                      col * (flagSize / 5)
                     }
                     y={
                       startFinishVisual.flag.y -
-                      FLAG_SIZE * 0.3 +
-                      row * (FLAG_SIZE / 5)
+                      flagSize * 0.3 +
+                      row * (flagSize / 5)
                     }
                   />
                 ) : null;

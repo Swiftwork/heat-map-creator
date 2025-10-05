@@ -8,6 +8,7 @@ interface CornerBadgeProps {
   isSelected?: boolean;
   isRemoveMode?: boolean;
   onClick?: () => void;
+  scale?: number; // Scale percentage (100 = 100%)
 }
 
 // Constants for badge sizing and styling
@@ -34,8 +35,13 @@ export function CornerBadge({
   isSelected = false,
   isRemoveMode = false,
   onClick,
+  scale = 100,
 }: CornerBadgeProps) {
-  const fontSize = BADGE_SIZE * FONT_SIZE_RATIO;
+  // Apply scale to badge size while keeping final values the same
+  const scaledBadgeSize = BADGE_SIZE * (scale / 100);
+  const scaledBadgeRadius = scaledBadgeSize / 2;
+  const scaledScaleFactor = scaledBadgeSize / 100;
+  const fontSize = scaledBadgeSize * FONT_SIZE_RATIO;
 
   const getBadgeColor = (): string => {
     if (isRemoveMode) return COLORS.RED;
@@ -53,7 +59,7 @@ export function CornerBadge({
   return (
     <g
       style={{ cursor: onClick ? "pointer" : "default" }}
-      transform={`translate(${x - BADGE_RADIUS}, ${y - BADGE_RADIUS}) scale(${SCALE_FACTOR}) rotate(${rotation} 50 50)`}
+      transform={`translate(${x - scaledBadgeRadius}, ${y - scaledBadgeRadius}) scale(${scaledScaleFactor}) rotate(${rotation} 50 50)`}
       onClick={handleClick}
     >
       {/* Background circle */}
@@ -68,12 +74,12 @@ export function CornerBadge({
         fill={COLORS.BLACK}
         style={{
           fontFamily: "Inter, sans-serif",
-          fontSize: `${fontSize / SCALE_FACTOR}px`,
+          fontSize: `${fontSize / scaledScaleFactor}px`,
           fontWeight: 700,
         }}
         textAnchor="middle"
         x="50"
-        y={50 + (BADGE_SIZE * TEXT_Y_OFFSET_RATIO) / SCALE_FACTOR}
+        y={50 + (scaledBadgeSize * TEXT_Y_OFFSET_RATIO) / scaledScaleFactor}
       >
         {speedLimit}
       </text>
