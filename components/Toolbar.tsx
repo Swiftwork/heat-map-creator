@@ -4,6 +4,8 @@
 import { Box, HStack, Input, Text, VStack } from "@chakra-ui/react";
 import React, { useRef } from "react";
 import {
+  FaChevronLeft,
+  FaChevronRight,
   FaEye,
   FaEyeSlash,
   FaFlagCheckered,
@@ -56,8 +58,8 @@ interface ToolbarProps {
   };
   onMetadataChange?: (metadata: any) => void;
   // Manual point editing props
-  selectedPointIndex?: number | null;
-  onRemoveSelectedPoint?: () => void;
+  _selectedPointIndex?: number | null;
+  _onRemoveSelectedPoint?: () => void;
   // Spline tool mode props
   splineToolMode?: "select" | "add" | "remove";
   onSplineToolModeChange?: (mode: "select" | "add" | "remove") => void;
@@ -67,7 +69,9 @@ interface ToolbarProps {
   // Corner editing props
   selectedCorner?: Corner | undefined;
   onCornerUpdate?: (updates: Partial<Corner>) => void;
-  onCornerRemove?: () => void;
+  // Corner movement props
+  onCornerMoveBackward?: () => void;
+  onCornerMoveForward?: () => void;
 }
 
 export function Toolbar({
@@ -87,19 +91,20 @@ export function Toolbar({
   onEditingModeChange,
   trackMetadata,
   onMetadataChange,
-  selectedPointIndex,
-  onRemoveSelectedPoint,
+  _selectedPointIndex,
+  _onRemoveSelectedPoint,
   splineToolMode = "select",
   onSplineToolModeChange,
   cornerToolMode = "select",
   onCornerToolModeChange,
   selectedCorner,
   onCornerUpdate,
-  onCornerRemove,
   trackColor,
   onTrackColorChange,
   countdownTextColor,
   onCountdownTextColorChange,
+  onCornerMoveBackward,
+  onCornerMoveForward,
 }: ToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -479,13 +484,25 @@ export function Toolbar({
                   </RetroButton>
                 </HStack>
 
-                <RetroButton
-                  colorScheme="red"
-                  size="sm"
-                  onClick={onCornerRemove}
-                >
-                  <FaTrash /> Remove Corner
-                </RetroButton>
+                <HStack gap={2}>
+                  <Text fontSize="sm" whiteSpace="nowrap">
+                    Move:
+                  </Text>
+                  <RetroButton
+                    colorScheme="blue"
+                    size="sm"
+                    onClick={onCornerMoveBackward}
+                  >
+                    <FaChevronLeft />
+                  </RetroButton>
+                  <RetroButton
+                    colorScheme="blue"
+                    size="sm"
+                    onClick={onCornerMoveForward}
+                  >
+                    <FaChevronRight />
+                  </RetroButton>
+                </HStack>
               </HStack>
             )}
 

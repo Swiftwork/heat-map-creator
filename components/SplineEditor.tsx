@@ -54,9 +54,16 @@ export function SplineEditor() {
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const [raceSegments, setRaceSegments] = useState(100);
   const [scale, setScale] = useState(100);
-  const [trackColor, setTrackColor, _isTrackColorLoaded] = useLocalStorage("track-appearance-color", "#3a3a3a");
-  const [countdownTextColor, setCountdownTextColor, _isCountdownColorLoaded] = useLocalStorage("track-appearance-countdown-text-color", "#ffd700");
-  const [showTrack, setShowTrack, _isShowTrackLoaded] = useLocalStorage("track-display-show-track", true);
+  const [trackColor, setTrackColor, _isTrackColorLoaded] = useLocalStorage(
+    "track-appearance-color",
+    "#3a3a3a"
+  );
+  const [countdownTextColor, setCountdownTextColor, _isCountdownColorLoaded] =
+    useLocalStorage("track-appearance-countdown-text-color", "#ffd700");
+  const [showTrack, setShowTrack, _isShowTrackLoaded] = useLocalStorage(
+    "track-display-show-track",
+    true
+  );
 
   // New editor state
   const [editorState, setEditorState] = useState<EditorState>({
@@ -787,25 +794,6 @@ export function SplineEditor() {
     [trackData, editorState.editingMode]
   );
 
-  // Remove selected corner
-  const handleRemoveCorner = useCallback(() => {
-    if (!trackData || !editorState.selectedCorner) return;
-
-    const updatedTrackData = {
-      ...trackData,
-      corners: trackData.corners.filter(
-        (c) => c.id !== editorState.selectedCorner
-      ),
-    };
-
-    setTrackData(updatedTrackData);
-    setEditorState((prev) => ({
-      ...prev,
-      currentTrack: updatedTrackData,
-      selectedCorner: null,
-    }));
-  }, [trackData, editorState.selectedCorner, setTrackData]);
-
   // Update selected corner properties
   const handleUpdateCorner = useCallback(
     (updates: Partial<Corner>) => {
@@ -823,6 +811,88 @@ export function SplineEditor() {
     },
     [trackData, editorState.selectedCorner, setTrackData]
   );
+
+  // Move selected corner backward on the track
+  const handleMoveCornerBackward = useCallback(() => {
+    if (!trackData || !editorState.selectedCorner) return;
+
+    const selectedCorner = trackData.corners.find(
+      (c) => c.id === editorState.selectedCorner
+    );
+    if (!selectedCorner) return;
+
+    // Find the previous space index (wrap around if necessary)
+    const totalSpaces = trackData.spaces.length;
+    const currentSpaceIndex = selectedCorner.spaceIndex;
+    let newSpaceIndex = currentSpaceIndex - 1;
+
+    if (newSpaceIndex < 0) {
+      newSpaceIndex = totalSpaces - 1;
+    }
+
+    // Check if there's already a corner at the target space
+    const existingCorner = trackData.corners.find(
+      (c) => c.spaceIndex === newSpaceIndex && c.id !== selectedCorner.id
+    );
+    if (existingCorner) return; // Don't move if target space is occupied
+
+    // Find the new position from spaces
+    const newSpace = trackData.spaces.find((s) => s.index === newSpaceIndex);
+    if (!newSpace) return;
+
+    const updatedTrackData = {
+      ...trackData,
+      corners: trackData.corners.map((c) =>
+        c.id === editorState.selectedCorner
+          ? { ...c, spaceIndex: newSpaceIndex, position: newSpace.position }
+          : c
+      ),
+    };
+
+    setTrackData(updatedTrackData);
+    setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+  }, [trackData, editorState.selectedCorner, setTrackData]);
+
+  // Move selected corner forward on the track
+  const handleMoveCornerForward = useCallback(() => {
+    if (!trackData || !editorState.selectedCorner) return;
+
+    const selectedCorner = trackData.corners.find(
+      (c) => c.id === editorState.selectedCorner
+    );
+    if (!selectedCorner) return;
+
+    // Find the next space index (wrap around if necessary)
+    const totalSpaces = trackData.spaces.length;
+    const currentSpaceIndex = selectedCorner.spaceIndex;
+    let newSpaceIndex = currentSpaceIndex + 1;
+
+    if (newSpaceIndex >= totalSpaces) {
+      newSpaceIndex = 0;
+    }
+
+    // Check if there's already a corner at the target space
+    const existingCorner = trackData.corners.find(
+      (c) => c.spaceIndex === newSpaceIndex && c.id !== selectedCorner.id
+    );
+    if (existingCorner) return; // Don't move if target space is occupied
+
+    // Find the new position from spaces
+    const newSpace = trackData.spaces.find((s) => s.index === newSpaceIndex);
+    if (!newSpace) return;
+
+    const updatedTrackData = {
+      ...trackData,
+      corners: trackData.corners.map((c) =>
+        c.id === editorState.selectedCorner
+          ? { ...c, spaceIndex: newSpaceIndex, position: newSpace.position }
+          : c
+      ),
+    };
+
+    setTrackData(updatedTrackData);
+    setEditorState((prev) => ({ ...prev, currentTrack: updatedTrackData }));
+  }, [trackData, editorState.selectedCorner, setTrackData]);
 
   // Handle start/finish line placement
   const handleStartFinishClick = useCallback(
@@ -951,6 +1021,8 @@ export function SplineEditor() {
       </svg>
 
       <Toolbar
+        _onRemoveSelectedPoint={handleRemoveSelectedPoint}
+        _selectedPointIndex={selectedPointIndex}
         cornerToolMode={editorState.cornerToolMode}
         countdownTextColor={countdownTextColor}
         debugMode={editorState.debugMode}
@@ -961,13 +1033,13 @@ export function SplineEditor() {
         selectedCorner={trackData?.corners.find(
           (c) => c.id === editorState.selectedCorner
         )}
-        selectedPointIndex={selectedPointIndex}
         showTrack={showTrack}
         splineToolMode={editorState.splineToolMode}
         trackColor={trackColor}
         trackMetadata={trackData?.metadata}
         onClear={handleClear}
-        onCornerRemove={handleRemoveCorner}
+        onCornerMoveBackward={handleMoveCornerBackward}
+        onCornerMoveForward={handleMoveCornerForward}
         onCornerToolModeChange={handleCornerToolModeChange}
         onCornerUpdate={handleUpdateCorner}
         onCountdownTextColorChange={setCountdownTextColor}
@@ -976,7 +1048,6 @@ export function SplineEditor() {
         onImageUpload={handleImageUpload}
         onMetadataChange={handleMetadataChange}
         onRaceSegmentsChange={handleRaceSegmentsChange}
-        onRemoveSelectedPoint={handleRemoveSelectedPoint}
         onScaleChange={handleScaleChange}
         onSplineToolModeChange={handleSplineToolModeChange}
         onToggleDebug={handleDebugMode}
