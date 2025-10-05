@@ -10,6 +10,21 @@ interface CornerBadgeProps {
   onClick?: () => void;
 }
 
+// Constants for badge sizing and styling
+const BADGE_SIZE = 45;
+const BADGE_RADIUS = BADGE_SIZE / 2;
+const SCALE_FACTOR = BADGE_SIZE / 100;
+const FONT_SIZE_RATIO = 0.45;
+const TEXT_Y_OFFSET_RATIO = 0.22;
+
+// Color constants
+const COLORS = {
+  WHITE: "white",
+  RED: "#ff4444",
+  YELLOW: "#ffe600",
+  BLACK: "black",
+} as const;
+
 export function CornerBadge({
   speedLimit,
   x,
@@ -19,94 +34,48 @@ export function CornerBadge({
   isRemoveMode = false,
   onClick,
 }: CornerBadgeProps) {
-  const size = 45;
-  const radius = size / 2;
-  const scale = size / 100; // Scale factor from original 100x100 SVG
+  const fontSize = BADGE_SIZE * FONT_SIZE_RATIO;
 
-  // Calculate font size - make it large and proportional to badge size
-  const fontSize = size * 0.52;
+  const getBadgeColor = (): string => {
+    if (isRemoveMode) return COLORS.RED;
+    if (isSelected) return COLORS.YELLOW;
+    return COLORS.WHITE;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      e.stopPropagation();
+      onClick();
+    }
+  };
 
   return (
-    <>
-      {/* Badge background, clock marks, and text - all scaled and rotated together */}
-      <g
-        style={{ cursor: onClick ? "pointer" : "default" }}
-        transform={`translate(${x - radius}, ${y - radius}) scale(${scale}) rotate(${rotation} 50 50)`}
-        onClick={(e) => {
-          if (onClick) {
-            e.stopPropagation();
-            onClick();
-          }
+    <g
+      style={{ cursor: onClick ? "pointer" : "default" }}
+      transform={`translate(${x - BADGE_RADIUS}, ${y - BADGE_RADIUS}) scale(${SCALE_FACTOR}) rotate(${rotation} 50 50)`}
+      onClick={handleClick}
+    >
+      {/* Background circle */}
+      <circle cx="50" cy="50" fill={getBadgeColor()} r="50" />
+
+      <circle cx="50" cy="50" r="45.98" />
+      <circle cx="50" cy="50" fill="#fff" r="41.35" />
+      <path d="M28.77,65.66l-4.09,3.68c-3.83-5-6.21-11.17-6.52-17.88l5.51.19c-.03-.55-.06-1.1-.06-1.65,0-1.18.09-2.34.24-3.49l-5.51-.19c.76-6.63,3.56-12.63,7.74-17.39l3.83,3.97c1.11-1.31,2.35-2.5,3.7-3.57l-3.84-3.97c4.88-4.01,10.98-6.59,17.65-7.12v5.51c.85-.08,1.7-.13,2.57-.13s1.73.04,2.57.13v-5.51c7.46.6,14.19,3.76,19.32,8.6l-4.1,3.69c1.27,1.16,2.42,2.44,3.44,3.82l4.09-3.68c3.83,5,6.21,11.17,6.52,17.88l-5.51-.19c.03.55.06,1.1.06,1.65,0,1.18-.09,2.34-.24,3.49l5.51.19c-.76,6.63-3.56,12.63-7.74,17.39l-3.83-3.97c-1.11,1.3-2.34,2.48-3.67,3.55l7.34,7.6c8.04-6.77,13.16-16.91,13.16-28.24,0-20.38-16.52-36.91-36.91-36.91S13.09,29.62,13.09,50c0,10.4,4.31,19.78,11.22,26.49l7.84-7.06c-1.25-1.15-2.39-2.41-3.39-3.77Z" />
+
+      {/* Speed limit text */}
+      <text
+        fill={COLORS.BLACK}
+        style={{
+          fontFamily: "Inter, sans-serif",
+          fontSize: `${fontSize / SCALE_FACTOR}px`,
+          fontWeight: 700,
         }}
+        textAnchor="middle"
+        x="50"
+        y={50 + (BADGE_SIZE * TEXT_Y_OFFSET_RATIO) / SCALE_FACTOR}
       >
-        <defs>
-          <clipPath id={`clip-badge-${speedLimit}`}>
-            <rect height="100" rx="50" width="100" />
-          </clipPath>
-        </defs>
-
-        {/* Background circle with white fill (red in remove mode, yellow when selected) */}
-        <rect
-          fill={isRemoveMode ? "#ff4444" : isSelected ? "#ffe600" : "white"}
-          height="100"
-          rx="50"
-          width="100"
-        />
-
-        <g clipPath={`url(#clip-badge-${speedLimit})`}>
-          {/* Clock/game board marks */}
-          <path
-            d="M21.2053 81.9353C14.7486 76.1135 10.2082 68.4714 8.18297 60.0168C6.15777 51.5622 6.74287 42.6923 9.86112 34.577C12.9794 26.4616 18.4843 19.4821 25.6498 14.559C32.8153 9.63583 41.3048 7.0003 49.9985 7C58.6923 6.9997 67.182 9.63466 74.3478 14.5573C81.5137 19.48 87.019 26.4591 90.1378 34.5742C93.2566 42.6893 93.8423 51.5592 91.8177 60.0139C89.7931 68.4687 85.2532 76.1111 78.7969 81.9333L75.8951 78.7155C81.7008 73.48 85.7832 66.6076 87.6038 59.0048C89.4244 51.4021 88.8977 43.426 86.0932 36.1287C83.2887 28.8313 78.3381 22.5554 71.8943 18.1288C65.4506 13.7022 57.8164 11.3328 49.9987 11.333C42.181 11.3333 34.5469 13.7033 28.1035 18.1303C21.6601 22.5574 16.7099 28.8336 13.9058 36.1311C11.1018 43.4287 10.5757 51.4048 12.3968 59.0074C14.2179 66.6101 18.3008 73.4821 24.1069 78.7172L21.2053 81.9353Z"
-            fill="black"
-          />
-          <path
-            d="M29.4941 73.335L21.7158 81.1123L18.8877 78.2842L26.665 70.5059L29.4941 73.335Z"
-            fill="black"
-          />
-          <path
-            d="M81.1123 78.2842L78.2842 81.1123L70.5059 73.335L73.335 70.5059L81.1123 78.2842Z"
-            fill="black"
-          />
-          <path d="M19 52H8V48H19V52Z" fill="black" />
-          <path d="M92 52H81V48H92V52Z" fill="black" />
-          <path
-            d="M29.4941 26.665L26.665 29.4941L18.8877 21.7158L21.7158 18.8877L29.4941 26.665Z"
-            fill="black"
-          />
-          <path
-            d="M81.1123 21.7158L73.335 29.4941L70.5059 26.665L78.2842 18.8877L81.1123 21.7158Z"
-            fill="black"
-          />
-          <path d="M52 19H48V8H52V19Z" fill="black" />
-        </g>
-
-        {/* Border */}
-        <rect
-          fill="none"
-          height="97"
-          rx="48.5"
-          stroke="black"
-          strokeWidth="3"
-          width="97"
-          x="1.5"
-          y="1.5"
-        />
-
-        {/* Speed limit number - now inside the rotated group */}
-        <text
-          fill="black"
-          style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: `${fontSize / scale}px`, // Adjust font size for scaling
-            fontWeight: 700,
-          }}
-          textAnchor="middle"
-          x="50"
-          y={50 + (size * 0.19) / scale} // Adjust y position for scaling
-        >
-          {speedLimit}
-        </text>
-      </g>
-    </>
+        {speedLimit}
+      </text>
+    </g>
   );
 }
