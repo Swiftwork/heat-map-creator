@@ -18,7 +18,6 @@ import { CountdownBadge } from "./CountdownBadge";
 const BASE_TRACK_WIDTH = 100;
 const BASE_STROKE_WIDTH = 3;
 const SAMPLES_PER_CURVE = 100;
-const CHECKER_SIZE = 10;
 const FLAG_SIZE = 30;
 
 // Corner and metadata graphics configuration
@@ -677,7 +676,7 @@ const computeCornerCheckeredLines = (
     }
 
     // Create consistent checkered segments with precise dash widths
-    const dashWidth = baseStrokeWidth * 1.5; // Use the exact line thickness as dash width
+    const dashWidth = baseStrokeWidth * 2; // Use line width for equal width and height
     let currentColor: "white" | "red" = "white";
     let currentSegmentStart = 0;
     let accumulatedLength = 0;
@@ -777,7 +776,8 @@ const buildStartFinishVisual = (
     y: endPoint.y - startPoint.y,
   };
   const lineLength = Math.hypot(lineVector.x, lineVector.y);
-  const numCheckers = Math.max(1, Math.floor(lineLength / CHECKER_SIZE));
+  const checkerSize = baseStrokeWidth * 2; // Use line width for checker size
+  const numCheckers = Math.max(1, Math.floor(lineLength / checkerSize));
   const checkers: CheckerSegment[] = [];
 
   for (let i = 0; i < numCheckers; i++) {

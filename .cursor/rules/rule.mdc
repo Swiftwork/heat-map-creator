@@ -12,3 +12,7 @@ alwaysApply: true
 - Skip verbose introductions and summaries unless needed
 - Use bullet points for multiple items
 - Prefer code examples over lengthy descriptions
+
+## Code Style
+
+- Hooks should always have all dependencies listed but they need to be referentially stable
