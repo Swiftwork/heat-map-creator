@@ -84,7 +84,7 @@ export interface TrackMetadata {
   name: string;
   laps: number;
   startFinishSpaceIndex: number;
-  raceDirection: "clockwise" | "counter-clockwise";
+  raceDirection: boolean; // true = clockwise, false = counter-clockwise
   // Enhanced board metadata
   boardMetadata: {
     cornersPerLap: number;
@@ -128,6 +128,11 @@ export interface TrackData {
     // Quality settings
     arcLengthSamples: number; // Samples for arc length calculation
     curvatureThreshold: number; // Threshold for corner detection
+  };
+  // Appearance settings
+  appearanceSettings?: {
+    trackColor?: string;
+    countdownTextColor?: string;
   };
   // Validation and export
   validationErrors: string[];
