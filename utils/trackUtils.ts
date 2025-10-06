@@ -7,6 +7,7 @@ import {
   TrackData,
   TrackMetadata,
 } from "@/types/spline";
+
 import {
   calculateChainArcLength,
   calculateChainTangent,
@@ -338,6 +339,7 @@ export function autoSuggestCorners(
         position: space.position,
         isAutoSuggested: true,
         innerSide: "left", // Default to left, can be adjusted manually based on race direction
+        badgeSide: "left", // Default badge side to left, can be adjusted independently
         cornerType,
         difficulty,
         suggestedGear: calculateSuggestedGear(speedLimit),

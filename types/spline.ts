@@ -69,6 +69,7 @@ export interface Corner {
   position: Point;
   isAutoSuggested: boolean;
   innerSide: "left" | "right"; // Which side is the inner side (thicker line) from this corner to the next
+  badgeSide: "left" | "right"; // Which side the corner badge appears on (independent of inner side)
   // Enhanced corner properties
   cornerType: "slow" | "medium" | "fast" | "chicane";
   difficulty: number; // 1-10 difficulty rating

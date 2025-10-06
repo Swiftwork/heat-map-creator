@@ -3,6 +3,7 @@ import {
   TrackExportData,
   TrackValidationResult,
 } from "@/types/spline";
+
 import { validateTrackData } from "./trackUtils";
 
 /**
@@ -169,10 +170,11 @@ function importLegacyFormat(legacyData: any): TrackData {
     };
   }
 
-  // Migrate corners to include innerSide property if missing
+  // Migrate corners to include innerSide and badgeSide properties if missing
   const corners = (legacyData.corners || []).map((corner: any) => ({
     ...corner,
     innerSide: corner.innerSide || "left", // Default to left for legacy corners
+    badgeSide: corner.badgeSide || corner.innerSide || "left", // Default badge side to match inner side or left
   }));
 
   const trackData: TrackData = {

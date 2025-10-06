@@ -695,6 +695,20 @@ export function SplineEditor() {
         }
       });
 
+
+      // Debug print: log coordinates, final nearest index, and nearest space coordinates
+      let nearestSpaceCoords = null;
+      if (nearestSpaceIndex !== null) {
+        const nearestSpace = trackData.spaces.find(s => s.index === nearestSpaceIndex);
+        if (nearestSpace) {
+          nearestSpaceCoords = nearestSpace.position;
+        }
+      }
+      console.debug(
+        `[findNearestSpace] Input: x=${x}, y=${y} | Nearest space index: ${nearestSpaceIndex}` +
+        (nearestSpaceCoords ? ` | Nearest space coords: x=${nearestSpaceCoords.x}, y=${nearestSpaceCoords.y}` : "")
+      );
+
       return nearestSpaceIndex;
     },
     [trackData]
@@ -724,6 +738,7 @@ export function SplineEditor() {
         position: space.position,
         isAutoSuggested: false,
         innerSide: trackData.metadata.raceDirection ? "left" : "right", // Set based on race direction (true = clockwise = left)
+        badgeSide: trackData.metadata.raceDirection ? "left" : "right", // Default badge side to match inner side
         cornerType: "medium",
         difficulty: 5,
         suggestedGear: 3,

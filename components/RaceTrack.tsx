@@ -547,12 +547,12 @@ const computeCornerVisuals = (
     }
 
     const perp = perpendicular(normal);
-    const badgeOffset = corner.innerSide === "left" ? -1 : 1;
+    const badgeOffset = corner.badgeSide === "left" ? -1 : 1;
 
     // Corner lines extend from the badge across the entire track to the opposite outer edge
     const badgeDistance = badgeOffset * flagOffset;
     const oppositeOuterEdgeDistance =
-      corner.innerSide === "left"
+      corner.badgeSide === "left"
         ? halfTrackWidth - baseStrokeWidth * 2 // Right outer edge
         : -halfTrackWidth + baseStrokeWidth * 2; // Left outer edge
 
@@ -569,9 +569,9 @@ const computeCornerVisuals = (
     };
 
     // Calculate rotation angle from tangent vector (in degrees)
-    // For right inner side corners, rotate 180 degrees to face the correct direction
+    // For right badge side corners, rotate 180 degrees to face the correct direction
     let rotation = Math.atan2(tangent.y, tangent.x) * (180 / Math.PI);
-    if (corner.innerSide === "right") {
+    if (corner.badgeSide === "right") {
       rotation += 180;
     }
 

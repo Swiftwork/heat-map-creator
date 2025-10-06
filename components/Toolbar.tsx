@@ -4,6 +4,7 @@
 import { Box, HStack, Input, Text, VStack } from "@chakra-ui/react";
 import React, { useRef } from "react";
 import {
+  FaArrowsLeftRight,
   FaChevronLeft,
   FaChevronRight,
   FaEye,
@@ -327,14 +328,12 @@ export function Toolbar({
             <HStack gap={2}>
               <HStack gap={1}>
                 <RetroButton
-                  colorScheme={debugMode ? "blue" : "gray"}
                   size="sm"
                   onClick={onToggleDebug}
                 >
                   {debugMode ? <FaEye /> : <FaEyeSlash />} Debug
                 </RetroButton>
                 <RetroButton
-                  colorScheme={showTrack ? "blue" : "gray"}
                   size="sm"
                   onClick={onToggleTrack}
                 >
@@ -353,7 +352,6 @@ export function Toolbar({
             />
             {hasImage ? (
               <RetroButton
-                colorScheme="orange"
                 size="sm"
                 onClick={onImageRemove}
               >
@@ -361,7 +359,6 @@ export function Toolbar({
               </RetroButton>
             ) : (
               <RetroButton
-                colorScheme="green"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -369,7 +366,7 @@ export function Toolbar({
               </RetroButton>
             )}
 
-            <RetroButton colorScheme="red" size="sm" onClick={onClear}>
+            <RetroButton size="sm" onClick={onClear}>
               <FaTrash /> Clear All
             </RetroButton>
           </HStack>
@@ -383,7 +380,6 @@ export function Toolbar({
                   Tool:
                 </Text>
                 <RetroButton
-                  colorScheme={splineToolMode === "select" ? "blue" : undefined}
                   isToggled={splineToolMode === "select"}
                   size="sm"
                   onClick={() => onSplineToolModeChange?.("select")}
@@ -391,7 +387,6 @@ export function Toolbar({
                   <FaHandPointer /> Select Point
                 </RetroButton>
                 <RetroButton
-                  colorScheme={splineToolMode === "add" ? "green" : undefined}
                   isToggled={splineToolMode === "add"}
                   size="sm"
                   onClick={() => onSplineToolModeChange?.("add")}
@@ -399,7 +394,6 @@ export function Toolbar({
                   <FaPlus /> Add Point
                 </RetroButton>
                 <RetroButton
-                  colorScheme={splineToolMode === "remove" ? "red" : undefined}
                   isToggled={splineToolMode === "remove"}
                   size="sm"
                   onClick={() => onSplineToolModeChange?.("remove")}
@@ -416,7 +410,6 @@ export function Toolbar({
                   Tool:
                 </Text>
                 <RetroButton
-                  colorScheme={cornerToolMode === "select" ? "blue" : undefined}
                   isToggled={cornerToolMode === "select"}
                   size="sm"
                   onClick={() => onCornerToolModeChange?.("select")}
@@ -424,7 +417,6 @@ export function Toolbar({
                   <FaHandPointer /> Select Corner
                 </RetroButton>
                 <RetroButton
-                  colorScheme={cornerToolMode === "add" ? "green" : undefined}
                   isToggled={cornerToolMode === "add"}
                   size="sm"
                   onClick={() => onCornerToolModeChange?.("add")}
@@ -432,7 +424,6 @@ export function Toolbar({
                   <FaPlus /> Add Corner
                 </RetroButton>
                 <RetroButton
-                  colorScheme={cornerToolMode === "remove" ? "red" : undefined}
                   isToggled={cornerToolMode === "remove"}
                   size="sm"
                   onClick={() => onCornerToolModeChange?.("remove")}
@@ -469,18 +460,24 @@ export function Toolbar({
                     Inner Side:
                   </Text>
                   <RetroButton
-                    isActive={selectedCorner.innerSide === "left"}
                     size="sm"
-                    onClick={() => onCornerUpdate?.({ innerSide: "left" })}
+                    onClick={() => onCornerUpdate?.({ innerSide: selectedCorner.innerSide === "left" ? "right" : "left" })}
                   >
-                    Left
+                    <FaArrowsLeftRight />
+                    Flip
                   </RetroButton>
+                </HStack>
+
+                <HStack gap={2}>
+                  <Text fontSize="sm" whiteSpace="nowrap">
+                    Badge Side:
+                  </Text>
                   <RetroButton
-                    isActive={selectedCorner.innerSide === "right"}
                     size="sm"
-                    onClick={() => onCornerUpdate?.({ innerSide: "right" })}
+                    onClick={() => onCornerUpdate?.({ badgeSide: selectedCorner.badgeSide === "left" ? "right" : "left" })}
                   >
-                    Right
+                    <FaArrowsLeftRight />
+                    Flip
                   </RetroButton>
                 </HStack>
 
@@ -489,14 +486,12 @@ export function Toolbar({
                     Move:
                   </Text>
                   <RetroButton
-                    colorScheme="blue"
                     size="sm"
                     onClick={onCornerMoveBackward}
                   >
                     <FaChevronLeft />
                   </RetroButton>
                   <RetroButton
-                    colorScheme="blue"
                     size="sm"
                     onClick={onCornerMoveForward}
                   >
@@ -662,9 +657,7 @@ export function Toolbar({
                       }
                     />
                   </HStack>
-                </HStack>
 
-                <HStack gap={4} justify="center" wrap="wrap">
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap">
                       Race Direction:
@@ -675,7 +668,7 @@ export function Toolbar({
                         handleMetadataChange("raceDirection", !trackMetadata.raceDirection)
                       }
                     >
-                      Flip Race Direction
+                      <FaArrowsLeftRight/> Flip
                     </RetroButton>
                   </HStack>
                 </HStack>
