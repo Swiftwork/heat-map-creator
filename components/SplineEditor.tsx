@@ -714,26 +714,26 @@ export function SplineEditor() {
     [trackData]
   );
 
-  // Handle clicking on track to add corner at nearest space
-  const handleAddCornerAtCoords = useCallback(
-    (x: number, y: number) => {
+  // Handle clicking on track space to add corner directly at space index
+  const handleAddCornerAtSpace = useCallback(
+    (spaceIndex: number) => {
       if (!trackData) return;
-
-      const nearestSpaceIndex = findNearestSpace(x, y);
-      if (nearestSpaceIndex === null) return;
 
       // Check if corner already exists at this space
       const existingCorner = trackData.corners.find(
-        (c) => c.spaceIndex === nearestSpaceIndex
+        (c) => c.spaceIndex === spaceIndex
       );
       if (existingCorner) return; // Don't allow adding if corner already exists
 
-      const space = trackData.spaces.find((s) => s.index === nearestSpaceIndex);
+      const space = trackData.spaces.find((s) => s.index === spaceIndex);
       if (!space) return;
+
+      // Debug print: log space index and position
+      console.log(`[handleAddCornerAtSpace] Adding corner at space index: ${spaceIndex}`);
 
       const newCorner: Corner = {
         id: generateId(),
-        spaceIndex: nearestSpaceIndex,
+        spaceIndex: spaceIndex,
         speedLimit: 5, // Default speed limit
         position: space.position,
         isAutoSuggested: false,
@@ -760,7 +760,21 @@ export function SplineEditor() {
         selectedCorner: newCorner.id,
       }));
     },
-    [trackData, setTrackData, findNearestSpace]
+    [trackData, setTrackData]
+  );
+
+  // Handle clicking on track to add corner at nearest space (legacy - kept for backward compatibility)
+  const handleAddCornerAtCoords = useCallback(
+    (x: number, y: number) => {
+      if (!trackData) return;
+
+      const nearestSpaceIndex = findNearestSpace(x, y);
+      if (nearestSpaceIndex === null) return;
+
+      // Use the new space-based handler
+      handleAddCornerAtSpace(nearestSpaceIndex);
+    },
+    [trackData, findNearestSpace, handleAddCornerAtSpace]
   );
 
   // Handle corner badge click for selection/removal
@@ -914,6 +928,9 @@ export function SplineEditor() {
     (spaceIndex: number) => {
       if (!trackData || editorState.editingMode !== "metadata") return;
 
+      // Debug print: log space index for start/finish line placement
+      console.log(`[handleStartFinishClick] Setting start/finish line at space index: ${spaceIndex}`);
+
       const updatedTrackData = {
         ...trackData,
         metadata: {
@@ -986,6 +1003,7 @@ export function SplineEditor() {
             startFinishSpaceIndex={trackData.metadata.startFinishSpaceIndex}
             trackColor={trackColor}
             onCornerClick={handleCornerClick}
+            onCornerSpaceClick={handleAddCornerAtSpace}
             onSpaceClick={handleSpaceClick}
             onStartFinishClick={handleStartFinishClick}
             onTrackClickWithCoords={handleAddCornerAtCoords}

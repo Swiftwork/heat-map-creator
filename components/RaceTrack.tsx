@@ -22,9 +22,9 @@ const BASE_FLAG_SIZE = 30;
 const BASE_COUNTDOWN_TEXT_FONT_SIZE = 20;
 
 // Corner and metadata graphics configuration
-const BASE_CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
-const CORNER_SELECTED_STROKE_WIDTH = 3;
-const CORNER_DEFAULT_STROKE_WIDTH = 1;
+// const BASE_CIRCLE_RADIUS = 20; // Visual circle radius for both corners and metadata
+// const CORNER_SELECTED_STROKE_WIDTH = 3; 
+// const CORNER_DEFAULT_STROKE_WIDTH = 1;
 const CORNER_OPACITY = 0.6;
 const CORNER_COLOR = "#4a9eff";
 const CORNER_DEFAULT_STROKE = "#4a9eff";
@@ -49,6 +49,7 @@ interface RaceTrackProps {
   selectedCorner?: string | null;
   onStartFinishClick?: (spaceIndex: number) => void;
   onCornerClick?: (cornerId: string) => void;
+  onCornerSpaceClick?: (spaceIndex: number) => void;
   onTrackClickWithCoords?: (x: number, y: number) => void;
 }
 
@@ -378,7 +379,7 @@ const computeSpaceCountdowns = (
     if (raceDirection) {
       // For clockwise (true), find the next corner in ascending order
       nextCorner =
-        sortedCorners.find((corner) => corner.spaceIndex > space.index) ??
+        sortedCorners.find((corner) => corner.spaceIndex >= space.index) ??
         sortedCorners[0];
     } else {
       // For counter-clockwise (false), find the next corner in descending order
@@ -387,9 +388,9 @@ const computeSpaceCountdowns = (
       nextCorner = sortedCorners
         .slice()
         .reverse()
-        .find((corner) => corner.spaceIndex <= space.index);
+        .find((corner) => corner.spaceIndex < space.index);
 
-      // If no corner found with smaller or equal index, wrap around to the last corner
+      // If no corner found with smaller index, wrap around to the last corner
       if (!nextCorner) {
         nextCorner = sortedCorners[sortedCorners.length - 1];
       }
@@ -410,7 +411,7 @@ const computeSpaceCountdowns = (
     } else {
       // For counter-clockwise (false), calculate distance going backwards
       spacesToCorner = space.index - nextCorner.spaceIndex;
-      if (spacesToCorner < 0) {
+      if (spacesToCorner <= 0) {
         // If we wrapped around, add the total spaces length
         spacesToCorner = space.index + spaces.length - nextCorner.spaceIndex;
       }
@@ -421,11 +422,11 @@ const computeSpaceCountdowns = (
     // For counter-clockwise: include the corner space and only reset after
     if (spacesToCorner >= 0) {
       if (raceDirection) {
-        // For clockwise (true), exclude the corner space itself
-        countdowns.set(space.index, spacesToCorner - 1);
-      } else {
-        // For counter-clockwise (false), include the corner space (don't subtract 1)
+        // For clockwise (true)
         countdowns.set(space.index, spacesToCorner);
+      } else {
+        // For counter-clockwise (false)
+        countdowns.set(space.index, spacesToCorner - 1);
       }
     }
   });
@@ -533,7 +534,7 @@ const computeCornerVisuals = (
       return visuals;
     }
 
-    const targetDistance = (corner.spaceIndex - 0.5) * segmentArcLength;
+    const targetDistance = (corner.spaceIndex + 0.5) * segmentArcLength;
     const { segmentIndex, t } = findTForDistance(
       bezierSegments,
       targetDistance
@@ -619,8 +620,8 @@ const computeCornerCheckeredLines = (
 
     // Calculate the start and end distances for the checkered line
     // Start before the corner and end after the corner (2 segments total)
-    const startDistance = (corner.spaceIndex - 1.5) * segmentArcLength; // Start one segment before corner
-    const endDistance = (corner.spaceIndex + 0.5) * segmentArcLength; // End one segment after corner
+    const startDistance = (corner.spaceIndex - 0.5) * segmentArcLength; // Start one segment before corner
+    const endDistance = (corner.spaceIndex + 1.5) * segmentArcLength; // End one segment after corner
 
     // Handle wrapping around the track
     let adjustedStartDistance = startDistance;
@@ -826,7 +827,8 @@ export function RaceTrack({
   selectedCorner,
   onStartFinishClick,
   onCornerClick,
-  onTrackClickWithCoords,
+  onCornerSpaceClick,
+  onTrackClickWithCoords: _onTrackClickWithCoords,
 }: RaceTrackProps) {
   // Derive trackWidth and baseStrokeWidth from scale
   const trackWidth = BASE_TRACK_WIDTH * (scale / 100);
@@ -834,7 +836,7 @@ export function RaceTrack({
   const halfTrackWidth = trackWidth / 2;
   const flagOffset = halfTrackWidth + 30 * (scale / 100);
   const flagSize = BASE_FLAG_SIZE * (scale / 100);
-  const circleRadius = BASE_CIRCLE_RADIUS * (scale / 100);
+  // const circleRadius = BASE_CIRCLE_RADIUS * (scale / 100);
 
   const bezierSegments = useMemo(
     () => pointsToBezierSegments(points, "C1"),
@@ -1081,8 +1083,6 @@ export function RaceTrack({
           return null;
         }
 
-        const isStartFinish = space.index === startFinishSpaceIndex;
-
         return (
           <g key={`space-${space.id}`}>
             {/* Small circle at each space - only in debug mode */}
@@ -1109,30 +1109,7 @@ export function RaceTrack({
               </>
             )}
 
-            {/* Removed corner selection circles - corners now placed by clicking on track */}
 
-            {/* Metadata selection circle for start/finish (interactive) - always visible in metadata mode */}
-            {isMetadataMode && (
-              <circle
-                cx={position.x}
-                cy={position.y}
-                fill={isStartFinish ? METADATA_SELECTED_COLOR : "transparent"}
-                opacity={CORNER_OPACITY}
-                r={circleRadius}
-                stroke={
-                  isStartFinish
-                    ? METADATA_SELECTED_COLOR
-                    : CORNER_DEFAULT_STROKE
-                }
-                strokeWidth={
-                  isStartFinish
-                    ? CORNER_SELECTED_STROKE_WIDTH * (scale / 100)
-                    : CORNER_DEFAULT_STROKE_WIDTH * (scale / 100)
-                }
-                style={{ cursor: "pointer" }}
-                onClick={() => onStartFinishClick?.(space.index)}
-              />
-            )}
           </g>
         );
       })}
@@ -1308,27 +1285,55 @@ export function RaceTrack({
         </g>
       )}
 
-      {/* Invisible clickable path for corner placement in add mode - rendered last so it's on top */}
-      {isCornersMode && cornerToolMode === "add" && (
-        <path
-          d={trackFillPath}
-          fill="transparent"
-          stroke="none"
-          style={{ cursor: "crosshair", pointerEvents: "all" }}
-          onClick={(e) => {
-            if (onTrackClickWithCoords) {
-              const svg = (e.target as SVGElement).ownerSVGElement;
-              if (svg) {
-                const pt = svg.createSVGPoint();
-                pt.x = e.clientX;
-                pt.y = e.clientY;
-                const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse());
-                onTrackClickWithCoords(svgP.x, svgP.y);
-              }
-            }
-          }}
-        />
-      )}
+      {/* Selection lines - drawn on top for better visibility */}
+      {/* Metadata selection thick lines for start/finish (interactive) - always visible in metadata mode */}
+      {isMetadataMode && spaces.map((space) => {
+        const segmentLine = segmentLines[space.index];
+        if (!segmentLine) return null;
+        
+        const { x1, x2, y1, y2 } = segmentLine;
+        if (x1 === undefined || x2 === undefined || y1 === undefined || y2 === undefined) return null;
+        
+        const isStartFinish = space.index === startFinishSpaceIndex;
+        return (
+          <line
+            key={`metadata-selection-${space.index}`}
+            opacity={CORNER_OPACITY}
+            stroke={isStartFinish ? METADATA_SELECTED_COLOR : CORNER_DEFAULT_STROKE}
+            strokeWidth={baseStrokeWidth * 12}
+            style={{ cursor: "pointer" }}
+            x1={x1}
+            x2={x2}
+            y1={y1}
+            y2={y2}
+            onClick={() => onStartFinishClick?.(space.index)}
+          />
+        );
+      })}
+
+      {/* Corner placement selection lines (interactive) - always visible in corner add mode */}
+      {isCornersMode && cornerToolMode === "add" && spaces.map((space) => {
+        const segmentLine = segmentLines[space.index];
+        if (!segmentLine) return null;
+        
+        const { x1, x2, y1, y2 } = segmentLine;
+        if (x1 === undefined || x2 === undefined || y1 === undefined || y2 === undefined) return null;
+        
+        return (
+          <line
+            key={`corner-selection-${space.index}`}
+            opacity={CORNER_OPACITY}
+            stroke={CORNER_COLOR}
+            strokeWidth={baseStrokeWidth * 12}
+            style={{ cursor: "crosshair" }}
+            x1={x1}
+            x2={x2}
+            y1={y1}
+            y2={y2}
+            onClick={() => onCornerSpaceClick?.(space.index)}
+          />
+        );
+      })}
     </g>
   );
 }
